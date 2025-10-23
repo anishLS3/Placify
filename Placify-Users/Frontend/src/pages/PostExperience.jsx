@@ -1401,59 +1401,16 @@ const PostExperience = () => {
 
                     {/* reCAPTCHA */}
                     {currentStep === totalSteps && (
-                      <Box w="full" display="flex" justifyContent="center" py={6}>
-                        <Box 
-                          bg="whiteAlpha.10" 
-                          borderRadius="sm" 
-                          p={1} 
-                          border="1px solid" 
-                          borderColor="whiteAlpha.60"
-                          backdropFilter="blur(4px)"
-                          maxW="320px"
-                          w="full"
-                          display="flex"
-                          flexDirection="row"
-                          alignItems="center"
-                          justifyContent="center"
-                        >
-                          {!recaptchaError ? (
-                            <Box display="flex" justifyContent="center">
-                              <ReCAPTCHA
-                                ref={recaptchaRef}
-                                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"} // Replace with your actual site key
-                                onChange={onRecaptchaChange}
-                                onExpired={onRecaptchaExpired}
-                                onError={onRecaptchaError}
-                                theme="dark"
-                                size="compact"
-                              />
-                            </Box>
-                          ) : (
-                            <Box textAlign="center" p={4} bg="red.500" borderRadius="lg" color="white">
-                              <Text fontSize="sm" fontWeight="bold" mb={2}>
-                                reCAPTCHA Failed to Load
-                              </Text>
-                              <Text fontSize="xs" mb={3}>
-                                This may be due to browser extensions blocking reCAPTCHA.
-                              </Text>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                color="white"
-                                borderColor="white"
-                                _hover={{ bg: "whiteAlpha.200" }}
-                                onClick={() => {
-                                  setRecaptchaError(false)
-                                  if (recaptchaRef.current) {
-                                    recaptchaRef.current.reset()
-                                  }
-                                }}
-                              >
-                                Try Again
-                              </Button>
-                            </Box>
-                          )}
-                        </Box>
+                      <Box w="full" display="flex" justifyContent="center">
+                        <ReCAPTCHA
+                          ref={recaptchaRef}
+                          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                          onChange={onRecaptchaChange}
+                          onExpired={onRecaptchaExpired}
+                          onError={onRecaptchaError}
+                          theme="dark"
+                          size="normal"
+                        />
                       </Box>
                     )}
 

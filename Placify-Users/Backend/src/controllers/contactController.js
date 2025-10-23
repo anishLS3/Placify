@@ -1,4 +1,23 @@
 const Contact = require('../models/Contact');
+const axios = require('axios');
+
+// reCAPTCHA verification function
+const verifyRecaptcha = async (token) => {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe' // Test secret key - replace with your actual secret key
+    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+      params: {
+        secret: secretKey,
+        response: token
+      }
+    })
+    
+    return response.data.success
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error)
+    return false
+  }
+}
 
 // Spam detection function
 const detectSpam = (message, email) => {
@@ -42,8 +61,25 @@ const detectSpam = (message, email) => {
 // Submit contact form
 exports.submitContact = async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message, recaptchaToken } = req.body;
     
+    // Verify reCAPTCHA (skip in development mode)
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    if (!isDevelopment) {
+      if (!recaptchaToken) {
+        return res.status(400).json({ 
+          message: 'reCAPTCHA verification is required'
+        });
+      }
+
+      const isRecaptchaValid = await verifyRecaptcha(recaptchaToken);
+      if (!isRecaptchaValid) {
+        return res.status(400).json({ 
+          message: 'reCAPTCHA verification failed. Please try again.'
+        });
+      }
+    }
+
     // Additional spam detection
     const spamError = detectSpam(message, email);
     if (spamError) {

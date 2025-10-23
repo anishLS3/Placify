@@ -11,6 +11,7 @@ import {
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { submitContact } from '../utils/api'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
@@ -30,6 +31,15 @@ const Contact = () => {
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState('')
+  
+  // reCAPTCHA site key (use test key for development)
+  const RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI' // Test site key
+
+  // reCAPTCHA callback
+  const handleRecaptchaChange = (token) => {
+    setRecaptchaToken(token)
+  }
 
   // Spam detection function
   const detectSpam = (message) => {
@@ -199,7 +209,8 @@ const Contact = () => {
       const contactData = {
         name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
         email: formData.email.trim(),
-        message: `Subject: ${formData.subject.trim()}\n\n${formData.message.trim()}`
+        message: `Subject: ${formData.subject.trim()}\n\n${formData.message.trim()}`,
+        recaptchaToken: recaptchaToken
       }
       
       await submitContact(contactData)
@@ -221,6 +232,7 @@ const Contact = () => {
         website: ''
       })
       setErrors({})
+      setRecaptchaToken('')
     } catch (error) {
       toast({
         title: "Failed to send message",
@@ -822,6 +834,16 @@ const Contact = () => {
                       tabIndex="-1"
                       autoComplete="off"
                     />
+
+                    {/* reCAPTCHA Widget */}
+                    <Box w="full" display="flex" justifyContent="center">
+                      <ReCAPTCHA
+                        sitekey={RECAPTCHA_SITE_KEY}
+                        onChange={handleRecaptchaChange}
+                        theme="dark"
+                        size="normal"
+                      />
+                    </Box>
 
                     {/* Submit Button */}
                   <Button
