@@ -28,6 +28,7 @@ const Preparation = () => {
         <PageHero
           title="Placement Preparation Guide"
           subtitle="Your one-stop guide to prepare effectively for campus placements — from resume building to cracking your final interview."
+          gradientWords={['preparation', 'guide']}
         />
 
         <Container maxW="1400px" px={6} pb={4}>

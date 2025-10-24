@@ -20,12 +20,26 @@ export const validateCTC = (ctc) => {
 
 // Input sanitization
 export const sanitizeInput = (input) => {
+  if (!input || typeof input !== 'string') return input
+  
   return input
+    // Remove script tags and their content
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // Remove onclick and other event handlers
     .replace(/onclick\s*=/gi, '')
+    .replace(/onload\s*=/gi, '')
+    .replace(/onerror\s*=/gi, '')
+    // Remove javascript: and data: protocols
     .replace(/javascript:/gi, '')
+    .replace(/data:/gi, '')
+    // Remove alert and other dangerous functions
     .replace(/alert\s*\(/gi, '')
-    .trim()
+    .replace(/confirm\s*\(/gi, '')
+    .replace(/prompt\s*\(/gi, '')
+    // Remove other potentially dangerous HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Only trim if the result is empty or just whitespace
+    .replace(/^\s+$/, '')
 }
 
 // Field validation
@@ -52,15 +66,15 @@ export const validateField = (name, value) => {
 
 // Form validation
 export const validateExperienceForm = (formData) => {
-  const requiredFields = ['companyName', 'jobRole', 'numberOfRounds', 'overallExperience']
+  const requiredFields = ['companyName', 'jobRole', 'positionType', 'numberOfRounds', 'overallExperience']
   
-  // Add LinkedIn URL to required fields only if not anonymous
+  // Add LinkedIn URL and fullName to required fields only if not anonymous
   if (!formData.isAnonymous) {
-    requiredFields.push('linkedinUrl')
+    requiredFields.push('linkedinUrl', 'fullName')
   }
   
   // Check for missing required fields
-  const missing = requiredFields.filter(field => !formData[field])
+  const missing = requiredFields.filter(field => !formData[field] || formData[field].trim() === '')
   
   if (missing.length > 0) {
     return {
@@ -76,8 +90,16 @@ export const validateExperienceForm = (formData) => {
     validationErrors.push('Please enter a valid email address')
   }
   
-  if (formData.linkedinUrl && !formData.isAnonymous && !validateLinkedInUrl(formData.linkedinUrl)) {
-    validationErrors.push('LinkedIn URL must start with https://www.linkedin.com/')
+  // LinkedIn URL validation - only if not anonymous
+  if (!formData.isAnonymous) {
+    if (!formData.linkedinUrl || !validateLinkedInUrl(formData.linkedinUrl)) {
+      validationErrors.push('LinkedIn URL is required and must start with https://www.linkedin.com/')
+    }
+  }
+  
+  // Position type validation
+  if (formData.positionType && !['Placement', 'Internship'].includes(formData.positionType)) {
+    validationErrors.push('Position type must be either "Placement" or "Internship"')
   }
   
   if (formData.ctc && !validateCTC(formData.ctc)) {

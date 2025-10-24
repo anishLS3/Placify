@@ -4,12 +4,22 @@ const { body, validationResult } = require('express-validator');
 const validateExperienceForm = [
   // Personal & Academic Details
   body('fullName')
-    .notEmpty()
-    .withMessage('Full name is required')
-    .isLength({ min: 2, max: 100 })
-    .withMessage('Full name must be between 2 and 100 characters')
-    .matches(/^[a-zA-Z\s\u00C0-\u017F]+$/)
-    .withMessage('Full name can only contain letters and spaces')
+    .optional()
+    .custom((value, { req }) => {
+      // Only require fullName if not anonymous
+      if (!req.body.isAnonymous && (!value || value.trim() === '')) {
+        throw new Error('Full name is required for non-anonymous posts')
+      }
+      if (value && value.trim() !== '') {
+        if (value.length < 2 || value.length > 100) {
+          throw new Error('Full name must be between 2 and 100 characters')
+        }
+        if (!/^[a-zA-Z\s\u00C0-\u017F]+$/.test(value)) {
+          throw new Error('Full name can only contain letters and spaces')
+        }
+      }
+      return true
+    })
     .trim()
     .escape(),
 
@@ -41,10 +51,19 @@ const validateExperienceForm = [
 
   body('linkedinUrl')
     .optional()
-    .isURL({ protocols: ['https'], host_whitelist: ['www.linkedin.com'] })
-    .withMessage('LinkedIn URL must start with https://www.linkedin.com/')
-    .isLength({ max: 500 })
-    .withMessage('LinkedIn URL cannot exceed 500 characters')
+    .custom((value, { req }) => {
+      // Only validate LinkedIn URL if not anonymous and value is provided
+      if (!req.body.isAnonymous && value && value.trim() !== '') {
+        const linkedinRegex = /^https:\/\/www\.linkedin\.com\/.*$/
+        if (!linkedinRegex.test(value)) {
+          throw new Error('LinkedIn URL must start with https://www.linkedin.com/')
+        }
+        if (value.length > 500) {
+          throw new Error('LinkedIn URL cannot exceed 500 characters')
+        }
+      }
+      return true
+    })
     .trim(),
 
   body('isAnonymous')
@@ -174,12 +193,25 @@ const validateExperienceForm = [
     .trim()
     .escape(),
 
-  // Rounds validation
+  // Rounds validation - now mandatory
   body('rounds')
-    .optional()
     .isArray()
     .withMessage('Rounds must be an array')
-    .custom((value) => {
+    .notEmpty()
+    .withMessage('At least one round is required')
+    .custom((value, { req }) => {
+      const numberOfRounds = parseInt(req.body.numberOfRounds);
+      
+      // Check if number of rounds matches the rounds array length
+      if (numberOfRounds && value.length !== numberOfRounds) {
+        throw new Error(`Number of rounds (${numberOfRounds}) must match the number of round details provided (${value.length}). All rounds must have detailed descriptions.`);
+      }
+      
+      // All rounds are mandatory - must have exactly the number of rounds specified
+      if (numberOfRounds && value.length === 0) {
+        throw new Error(`All ${numberOfRounds} rounds must have detailed descriptions`);
+      }
+      
       if (value && value.length > 0) {
         for (let i = 0; i < value.length; i++) {
           const round = value[i];
@@ -292,11 +324,15 @@ const validateExperienceContent = (req, res, next) => {
 const validateLinkedInForAnonymous = (req, res, next) => {
   const { isAnonymous, linkedinUrl } = req.body;
   
-  if (!isAnonymous && (!linkedinUrl || linkedinUrl.trim() === '')) {
-    return res.status(400).json({
-      success: false,
-      message: 'LinkedIn URL is required for non-anonymous posts'
-    });
+  // Only require LinkedIn URL if not anonymous and fullName is provided (indicating non-anonymous)
+  if (!isAnonymous && linkedinUrl && linkedinUrl.trim() !== '') {
+    const linkedinRegex = /^https:\/\/www\.linkedin\.com\/.*$/
+    if (!linkedinRegex.test(linkedinUrl)) {
+      return res.status(400).json({
+        success: false,
+        message: 'LinkedIn URL must start with https://www.linkedin.com/'
+      });
+    }
   }
   
   next();

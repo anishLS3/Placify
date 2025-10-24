@@ -69,7 +69,7 @@ const validateContactContent = (req, res, next) => {
 
   // Check for excessive special characters
   const specialCharCount = (message.match(/[!@#$%^&*()_+=\[\]{}|;':",./<>?\\]/g) || []).length;
-  if (specialCharCount > message.length * 0.3) {
+  if (specialCharCount > message.length * 0.4) {
     return res.status(400).json({
       success: false,
       message: 'Message contains too many special characters'

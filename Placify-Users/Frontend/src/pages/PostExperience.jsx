@@ -16,6 +16,7 @@ const PostExperience = () => {
         <PageHero 
           title="Share Your Experience"
           subtitle="Help fellow students by sharing your placement journey and interview experience."
+          gradientWords={['experience']}
         />
 
         <Container maxW="1400px" px={6} pb={32}>

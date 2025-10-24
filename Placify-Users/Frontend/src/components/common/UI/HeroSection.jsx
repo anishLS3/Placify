@@ -1,9 +1,10 @@
 import { Box, Heading, Text } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
+import GradientText from './GradientText'
 
 const MotionBox = motion(Box)
 
-const PageHero = ({ title, subtitle, minHeight = "100vh" }) => {
+const PageHero = ({ title, subtitle, minHeight = "100vh", gradientWords = [] }) => {
   return (
     <Box 
       textAlign="center" 
@@ -27,7 +28,19 @@ const PageHero = ({ title, subtitle, minHeight = "100vh" }) => {
           lineHeight="1.05"
           letterSpacing="-0.02em"
         >
-          {title}
+          {title.split(' ').map((word, index, array) => {
+            // Remove punctuation for comparison
+            const cleanWord = word.toLowerCase().replace(/[.,!?;:]/g, '')
+            if (gradientWords.includes(cleanWord)) {
+              return (
+                <GradientText key={index} gradient="apple" fontSize="inherit" fontWeight="inherit">
+                  {word}
+                </GradientText>
+              )
+            }
+            // Add space after word if it's not the last word
+            return index === array.length - 1 ? word : word + ' '
+          })}
         </Heading>
         
         {subtitle && (

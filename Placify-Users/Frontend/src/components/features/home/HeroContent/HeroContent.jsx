@@ -4,6 +4,7 @@ import {
 import { motion } from 'framer-motion'
 import { FaBriefcase, FaCode, FaTrophy, FaRocket } from 'react-icons/fa'
 import CompanyCards from './CompanyCards'
+import GradientText from '@/components/common/UI/GradientText'
 
 const MotionBox = motion(Box)
 const MotionHeading = motion(Heading)
@@ -30,7 +31,9 @@ const HeroContent = ({ isCardsHovered, setIsCardsHovered }) => {
           >
             Get placed at
             <br />
-            top companies.
+            <GradientText gradient="apple" fontSize="inherit" fontWeight="inherit">
+              top companies.
+            </GradientText>
           </Heading>
 
           {/* Subtitle */}

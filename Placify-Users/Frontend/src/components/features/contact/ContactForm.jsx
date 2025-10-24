@@ -6,6 +6,7 @@ import { FaPaperPlane } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { submitContact, validateForm } from '@/utils'
+import { handleError, getUserFriendlyMessage, formatValidationErrors, retryRequest } from '@/utils/errorHandler'
 import ReCAPTCHA from 'react-google-recaptcha'
 
 const MotionBox = motion(Box)
@@ -48,17 +49,30 @@ const ContactFormSection = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData({
+    const newFormData = {
       ...formData,
       [name]: value
-    })
+    }
+    setFormData(newFormData)
     
-    // Clear error when user starts typing
+    // Clear error when user starts typing and validate field
     if (errors[name]) {
       setErrors({
         ...errors,
         [name]: ''
       })
+    }
+    
+    // Real-time validation for better UX
+    if (value.trim() && ['firstName', 'lastName', 'email', 'subject', 'message'].includes(name)) {
+      const { validateField } = require('@/utils/validation')
+      const error = validateField(name, value, newFormData)
+      if (error) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: error
+        }))
+      }
     }
   }
 
@@ -123,11 +137,57 @@ const ContactFormSection = () => {
       setErrors({})
       setRecaptchaToken('')
     } catch (error) {
+      console.error('Contact form submission error:', error)
+      
+      // Use enhanced error handling
+      const processedError = handleError(error, { 
+        context: 'contact_form_submission',
+        formData: formData 
+      })
+      
+      let errorMessage = getUserFriendlyMessage(processedError.type, processedError.message)
+      let errorTitle = 'Failed to send message'
+      
+      // Handle specific error types
+      switch (processedError.type) {
+        case 'VALIDATION_ERROR':
+          errorTitle = 'Validation Error'
+          if (processedError.errors && processedError.errors.length > 0) {
+            const fieldErrors = processedError.errors.reduce((acc, err) => {
+              if (err.field) {
+                acc[err.field] = err.message
+              }
+              return acc
+            }, {})
+            setErrors(fieldErrors)
+            errorMessage = "Please fix the errors below."
+          }
+          break
+          
+        case 'NETWORK_ERROR':
+          errorTitle = 'Connection Error'
+          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.'
+          break
+          
+        case 'SERVER_ERROR':
+          errorTitle = 'Server Error'
+          errorMessage = 'Server is temporarily unavailable. Please try again later.'
+          break
+          
+        case 'TIMEOUT_ERROR':
+          errorTitle = 'Request Timeout'
+          errorMessage = 'Request timed out. Please try again.'
+          break
+          
+        default:
+          errorMessage = processedError.message || 'An unexpected error occurred. Please try again.'
+      }
+      
       toast({
-        title: "Failed to send message",
-        description: error.response?.data?.message || "Please try again later.",
+        title: errorTitle,
+        description: errorMessage,
         status: "error",
-        duration: 5000,
+        duration: 7000,
         isClosable: true,
       })
     } finally {
@@ -176,7 +236,7 @@ const ContactFormSection = () => {
               <HStack spacing={6} w="full" flexDirection={{ base: 'column', sm: 'row' }}>
                 <FormControl isInvalid={errors.firstName} w="full">
                   <FormLabel color="whiteAlpha.600" fontSize="sm" fontWeight="500">
-                    First Name *
+                    First Name
                   </FormLabel>
                   <Input
                     name="firstName"
@@ -203,7 +263,7 @@ const ContactFormSection = () => {
                 
                 <FormControl isInvalid={errors.lastName} w="full">
                   <FormLabel color="whiteAlpha.600" fontSize="sm" fontWeight="500">
-                    Last Name *
+                    Last Name
                   </FormLabel>
                   <Input
                     name="lastName"
@@ -232,7 +292,7 @@ const ContactFormSection = () => {
               {/* Email Field */}
               <FormControl isInvalid={errors.email} w="full">
                 <FormLabel color="whiteAlpha.600" fontSize="sm" fontWeight="500">
-                  Email Address *
+                  Email Address
                 </FormLabel>
                 <Input
                   name="email"
@@ -261,7 +321,7 @@ const ContactFormSection = () => {
               {/* Subject Field */}
               <FormControl isInvalid={errors.subject} w="full">
                 <FormLabel color="whiteAlpha.600" fontSize="sm" fontWeight="500">
-                  Subject *
+                  Subject
                 </FormLabel>
                 <Input
                   name="subject"
@@ -289,7 +349,7 @@ const ContactFormSection = () => {
               {/* Message Field */}
               <FormControl isInvalid={errors.message} w="full">
                 <FormLabel color="whiteAlpha.600" fontSize="sm" fontWeight="500">
-                  Message *
+                  Message
                 </FormLabel>
                 <Textarea
                   name="message"

@@ -1,5 +1,6 @@
 const Experience = require('../models/Experience');
 const axios = require('axios');
+const { AppError, ERROR_TYPES, handleValidationError, handleSpamError, asyncHandler } = require('../utils/errorHandler');
 
 // Validation helper functions
 const validateEmail = (email) => {
@@ -21,7 +22,7 @@ const validateCTC = (ctc) => {
 const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input
   
-  return input
+  const sanitized = input
     // Remove script tags and their content
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     // Remove other potentially dangerous HTML tags
@@ -50,6 +51,9 @@ const sanitizeInput = (input) => {
     .normalize('NFC')
     // Trim whitespace
     .trim()
+  
+  // Return undefined if the result is empty to avoid setting empty strings
+  return sanitized === '' ? undefined : sanitized
 }
 
 // Advanced spam detection for experience content
@@ -60,7 +64,7 @@ const detectExperienceSpam = (overallExperience, companyName, jobRole) => {
   
   // Enhanced spam keywords for experience content
   const spamKeywords = [
-    'fake', 'spam', 'test', 'dummy', 'placeholder', 'lorem ipsum',
+    'fake', 'spam', 'dummy', 'placeholder', 'lorem ipsum',
     'click here', 'buy now', 'free money', 'investment', 'cryptocurrency',
     'casino', 'gambling', 'lottery', 'viagra', 'weight loss',
     'seo services', 'marketing', 'promote', 'advertisement'
@@ -77,14 +81,14 @@ const detectExperienceSpam = (overallExperience, companyName, jobRole) => {
     return 'Spam detected: excessive emojis in experience';
   }
   
-  // Check for suspicious company names
-  const suspiciousCompanies = ['test', 'fake', 'dummy', 'spam', 'company', 'corp'];
+  // Check for suspicious company names (more lenient)
+  const suspiciousCompanies = ['fake', 'dummy', 'spam'];
   if (suspiciousCompanies.some(suspicious => lowerCompany.includes(suspicious))) {
     return 'Spam detected: suspicious company name';
   }
   
-  // Check for suspicious job roles
-  const suspiciousRoles = ['test', 'fake', 'dummy', 'spam', 'role', 'position'];
+  // Check for suspicious job roles (more lenient)
+  const suspiciousRoles = ['fake', 'dummy', 'spam'];
   if (suspiciousRoles.some(suspicious => lowerRole.includes(suspicious))) {
     return 'Spam detected: suspicious job role';
   }
@@ -123,13 +127,13 @@ const preprocessExperienceData = (data) => {
   // Sanitize all text fields
   const textFields = [
     'fullName', 'email', 'collegeName', 'companyName', 'jobRole', 
-    'interviewType', 'jobLocation', 'ctc', 'overallExperience',
+    'jobLocation', 'ctc', 'overallExperience',
     'codingQuestions', 'technicalQuestions', 'hrQuestions',
     'resourcesUsed', 'tipsForCandidates', 'mistakesToAvoid', 'linkedinUrl'
   ];
   
   textFields.forEach(field => {
-    if (data[field]) {
+    if (data[field] && data[field].toString().trim() !== '') {
       processed[field] = sanitizeInput(data[field].toString()).trim();
     }
   });
@@ -145,9 +149,9 @@ const preprocessExperienceData = (data) => {
   // Process other fields
   processed.isAnonymous = Boolean(data.isAnonymous);
   processed.positionType = data.positionType;
-  processed.branch = data.branch;
-  processed.interviewType = data.interviewType;
-  processed.difficultyLevel = data.difficultyLevel;
+  processed.branch = data.branch && data.branch.trim() !== '' ? data.branch : undefined;
+  processed.interviewType = data.interviewType && data.interviewType.trim() !== '' ? data.interviewType : undefined;
+  processed.difficultyLevel = data.difficultyLevel && data.difficultyLevel.trim() !== '' ? data.difficultyLevel : undefined;
   processed.roundTypes = data.roundTypes || [];
   processed.numberOfRounds = parseInt(data.numberOfRounds) || 1;
   processed.batchYear = data.batchYear ? parseInt(data.batchYear) : null;
@@ -265,11 +269,6 @@ exports.addExperience = async (req, res) => {
       validationErrors.push('Overall experience is required and must be between 50 and 2000 characters')
     }
     
-    // LinkedIn URL validation (only if not anonymous)
-    if (!isAnonymous && (!linkedinUrl || !validateLinkedInUrl(linkedinUrl))) {
-      validationErrors.push('LinkedIn URL is required for non-anonymous posts and must start with https://www.linkedin.com/')
-    }
-    
     // Email validation (if provided)
     if (email && !validateEmail(email)) {
       validationErrors.push('Please provide a valid email address')
@@ -278,11 +277,6 @@ exports.addExperience = async (req, res) => {
     // CTC validation (if provided)
     if (ctc && !validateCTC(ctc)) {
       validationErrors.push('CTC must be in format like "6 LPA" or "6.5 LPA"')
-    }
-    
-    // Full name validation (if provided and not anonymous)
-    if (!isAnonymous && fullName && fullName.trim().length < 2) {
-      validationErrors.push('Full name must be at least 2 characters long')
     }
     
     // Difficulty level validation (if provided)
@@ -303,11 +297,7 @@ exports.addExperience = async (req, res) => {
     // Advanced spam detection
     const spamError = detectExperienceSpam(overallExperience, companyName, jobRole);
     if (spamError) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Submission blocked due to suspicious content',
-        reason: spamError
-      });
+      throw handleSpamError(spamError);
     }
     
     // Duplicate content detection
@@ -327,11 +317,13 @@ exports.addExperience = async (req, res) => {
     
     // Return validation errors if any
     if (validationErrors.length > 0) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Validation failed',
-        errors: validationErrors
-      });
+      throw new AppError(
+        ERROR_TYPES.VALIDATION_ERROR,
+        'Validation failed',
+        400,
+        validationErrors.map(error => ({ message: error })),
+        'Invalid input data provided'
+      );
     }
 
     // Verify reCAPTCHA (skip in development mode)
@@ -353,7 +345,7 @@ exports.addExperience = async (req, res) => {
 
     // Sanitize all text inputs
     const sanitizedData = {
-      fullName: sanitizeInput(fullName || name || (isAnonymous ? 'Anonymous' : 'Unknown')),
+      fullName: sanitizeInput(fullName || (isAnonymous ? 'Anonymous' : 'Unknown')),
       email: sanitizeInput(email || ''),
       collegeName: sanitizeInput(collegeName || ''),
       branch: sanitizeInput(branch || ''),
@@ -394,7 +386,7 @@ exports.addExperience = async (req, res) => {
       // Selection Process Details
       numberOfRounds: parseInt(numberOfRounds),
       roundTypes: roundTypes || [],
-      difficultyLevel: difficultyLevel || '',
+      difficultyLevel: difficultyLevel && difficultyLevel.trim() !== '' ? difficultyLevel : undefined,
       overallExperience: sanitizedData.overallExperience,
       
       // Detailed Round Descriptions
@@ -414,7 +406,7 @@ exports.addExperience = async (req, res) => {
       mistakesToAvoid: sanitizedData.mistakesToAvoid,
       
       // Legacy fields for backward compatibility
-      name: fullName || name || (isAnonymous ? 'Anonymous' : 'Unknown'),
+      name: fullName || (isAnonymous ? 'Anonymous' : 'Unknown'),
       company: companyName,
       role: jobRole,
       experience: overallExperience

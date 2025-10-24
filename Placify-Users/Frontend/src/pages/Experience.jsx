@@ -121,6 +121,7 @@ const Experience = () => {
         <PageHero 
           title="Placement Experiences"
           subtitle="Real experiences shared by students who successfully secured their dream placements."
+          gradientWords={['experience']}
         />
 
         <Container maxW="1400px" px={6} pb={32}>

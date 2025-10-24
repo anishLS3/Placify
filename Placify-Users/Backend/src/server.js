@@ -3,10 +3,10 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
+// Rate limiting imports removed for development
 const mongoSanitize = require('express-mongo-sanitize');
 const connectDB = require('./config/db');
+const { handleError, handleNotFound, requestLogger, securityHeaders } = require('./utils/errorHandler');
 
 // Debug: Log environment variables (excluding sensitive data)
 console.log('Environment Variables:');
@@ -90,96 +90,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Advanced Rate Limiting with Slow Down Protection
-const speedLimiter = slowDown({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  delayAfter: 2, // allow 2 requests per 15 minutes, then...
-  delayMs: (used, req) => {
-    const delayAfter = req.slowDown.limit;
-    return (used - delayAfter) * 500;
-  },
-  maxDelayMs: 20000, // max delay of 20 seconds
-  skipSuccessfulRequests: true,
-  skipFailedRequests: false
-});
-
-// Contact form rate limiting (more restrictive)
-const contactLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // limit each IP to 3 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many contact form submissions, please try again later.',
-    retryAfter: '15 minutes'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
-  skipFailedRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      success: false,
-      message: 'Too many contact form submissions, please try again later.',
-      retryAfter: '15 minutes'
-    });
-  }
-});
-
-// Experience submission rate limiting
-const experienceLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 experience submissions per windowMs
-  message: {
-    success: false,
-    message: 'Too many experience submissions, please try again later.',
-    retryAfter: '15 minutes'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
-  skipFailedRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      success: false,
-      message: 'Too many experience submissions, please try again later.',
-      retryAfter: '15 minutes'
-    });
-  }
-});
-
-// General rate limiting for all API routes
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again later.',
-    retryAfter: '15 minutes'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
-  skipFailedRequests: false
-});
-
-// Strict rate limiting for sensitive operations
-const strictLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5, // limit each IP to 5 requests per minute
-  message: {
-    success: false,
-    message: 'Too many requests, please slow down.',
-    retryAfter: '1 minute'
-  },
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
-// Apply rate limiting with speed limiting
-app.use('/api', generalLimiter, speedLimiter);
-app.use('/api/contact', contactLimiter);
-app.use('/api/experiences', experienceLimiter);
-app.use('/api/experiences/:id', strictLimiter); // Strict limiting for update/delete
+// Rate limiting disabled for development
+// All rate limiting middleware has been removed for easier development and testing
 
 // Routes
 app.use('/api/experiences', require('./routes/experienceRoutes'));
@@ -205,30 +117,11 @@ app.use('*', (req, res) => {
   });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Global error handler:', err);
-  
-  if (err.type === 'entity.too.large') {
-    return res.status(413).json({
-      success: false,
-      message: 'Request entity too large'
-    });
-  }
-  
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
-      errors: Object.values(err.errors).map(e => e.message)
-    });
-  }
-  
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error'
-  });
-});
+// 404 handler for undefined routes
+app.use(handleNotFound);
+
+// Global error handling middleware (must be last)
+app.use(handleError);
 
 const PORT = process.env.PORT || 5000;
 

@@ -35,6 +35,7 @@ const Contact = () => {
         <PageHero 
           title="Get in touch."
           subtitle="Have questions or need help? We're here to assist you with your placement journey."
+          gradientWords={['touch']}
         />
 
         <Container maxW="1400px" px={6} pb={32}>

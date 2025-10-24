@@ -1,5 +1,6 @@
 const Contact = require('../models/Contact');
 const axios = require('axios');
+const { AppError, ERROR_TYPES, handleValidationError, handleSpamError, asyncHandler } = require('../utils/errorHandler');
 
 // Enhanced input sanitization with Unicode support
 const sanitizeInput = (input) => {
@@ -258,7 +259,7 @@ exports.submitContact = async (req, res) => {
     
     // Check for excessive numbers in message
     const numberCount = (message.match(/\d/g) || []).length;
-    if (numberCount > message.length * 0.5) {
+    if (numberCount > message.length * 0.6) {
       return res.status(400).json({ 
         message: 'Message contains too many numbers' 
       });

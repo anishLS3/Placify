@@ -20,23 +20,30 @@ const ProcessDetailsStep = ({ formData, handleChange }) => {
           <FormLabel color="whiteAlpha.600" fontSize="sm" fontWeight="500">
             Number of Rounds
           </FormLabel>
-          <Input
+          <Select
             name="numberOfRounds"
-            type="number"
             value={formData.numberOfRounds}
             onChange={handleChange}
-            placeholder="4"
+            placeholder="Select number of rounds"
             bg="whiteAlpha.100"
             border="1px solid"
             borderColor="whiteAlpha.200"
             color="white"
-            _placeholder={{ color: "whiteAlpha.500" }}
             _focus={{
               borderColor: "blue.400",
               boxShadow: "0 0 0 1px rgba(59, 130, 246, 0.3)"
             }}
             h={12}
-          />
+          >
+            <option value="1" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>1 Round</option>
+            <option value="2" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>2 Rounds</option>
+            <option value="3" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>3 Rounds</option>
+            <option value="4" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>4 Rounds</option>
+            <option value="5" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>5 Rounds</option>
+            <option value="6" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>6 Rounds</option>
+            <option value="7" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>7 Rounds</option>
+            <option value="8" style={{ backgroundColor: '#1a1a1a', color: 'white' }}>8 Rounds</option>
+          </Select>
         </FormControl>
 
         <FormControl>

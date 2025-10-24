@@ -1,5 +1,5 @@
 import { 
-  VStack, HStack, FormControl, FormLabel, Input, Select 
+  VStack, HStack, FormControl, FormLabel, Input, Select, Text 
 } from '@chakra-ui/react'
 
 const CompanyDetailsStep = ({ formData, handleChange }) => {

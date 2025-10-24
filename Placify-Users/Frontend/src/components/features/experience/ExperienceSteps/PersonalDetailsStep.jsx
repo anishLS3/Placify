@@ -15,7 +15,7 @@ const PersonalDetailsStep = ({ formData, handleChange }) => {
         Personal & Academic Details
       </h2>
     
-      <FormControl>
+      <FormControl isRequired={!formData.isAnonymous}>
         <FormLabel color="whiteAlpha.600" fontSize="sm" fontWeight="500">
           Full Name
         </FormLabel>

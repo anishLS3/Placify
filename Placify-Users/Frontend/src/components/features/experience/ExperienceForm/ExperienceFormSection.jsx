@@ -14,6 +14,7 @@ import ReCAPTCHA from 'react-google-recaptcha'
 import { useNavigate } from 'react-router-dom'
 import { addExperience } from '@/utils/api'
 import { validateExperienceForm, sanitizeInput } from '../ExperienceValidation/validation'
+import { handleError, getUserFriendlyMessage, formatValidationErrors, retryRequest } from '@/utils/errorHandler'
 import ExperienceStepNavigation from '../ExperienceSteps/StepNavigation'
 import PersonalDetailsStep from '../ExperienceSteps/PersonalDetailsStep'
 import CompanyDetailsStep from '../ExperienceSteps/CompanyDetailsStep'
@@ -131,13 +132,45 @@ const ExperienceFormSection = () => {
         })
       }
     } else {
-      // Sanitize input for text fields
-      const sanitizedValue = type === 'email' || type === 'url' ? value : sanitizeInput(value)
+      // Only sanitize specific fields that need it, not all text inputs
+      let processedValue = value
       
-      setFormData({
-        ...formData,
-        [name]: sanitizedValue
-      })
+      // Only sanitize fields that might contain HTML or scripts
+      const fieldsToSanitize = ['overallExperience', 'codingQuestions', 'technicalQuestions', 'hrQuestions', 'resourcesUsed', 'tipsForCandidates', 'mistakesToAvoid']
+      
+      if (fieldsToSanitize.includes(name)) {
+        processedValue = sanitizeInput(value)
+      }
+      
+      // Handle numberOfRounds change to dynamically create round inputs
+      if (name === 'numberOfRounds') {
+        const numberOfRounds = parseInt(value) || 0
+        const currentRoundsCount = formData.rounds.length
+        
+        // Create new rounds array based on numberOfRounds
+        let newRounds = [...formData.rounds]
+        
+        if (numberOfRounds > currentRoundsCount) {
+          // Add new rounds
+          for (let i = currentRoundsCount; i < numberOfRounds; i++) {
+            newRounds.push({ name: '', description: '' })
+          }
+        } else if (numberOfRounds < currentRoundsCount) {
+          // Remove excess rounds
+          newRounds = newRounds.slice(0, numberOfRounds)
+        }
+        
+        setFormData({
+          ...formData,
+          [name]: processedValue,
+          rounds: newRounds
+        })
+      } else {
+        setFormData({
+          ...formData,
+          [name]: processedValue
+        })
+      }
     }
   }
 
@@ -166,7 +199,10 @@ const ExperienceFormSection = () => {
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
+      // Validate current step before proceeding
+      if (validateCurrentStep()) {
+        setCurrentStep(currentStep + 1)
+      }
     }
   }
 
@@ -177,7 +213,109 @@ const ExperienceFormSection = () => {
   }
 
   const goToStep = (step) => {
-    setCurrentStep(step)
+    // Allow going to previous steps, but validate if going to next steps
+    if (step > currentStep) {
+      if (validateCurrentStep()) {
+        setCurrentStep(step)
+      }
+    } else {
+      setCurrentStep(step)
+    }
+  }
+
+  // Validate current step before proceeding
+  const validateCurrentStep = () => {
+    const errors = []
+    
+    switch (currentStep) {
+      case 1: // Personal Details Step
+        if (!formData.isAnonymous) {
+          if (!formData.fullName || formData.fullName.trim() === '') {
+            errors.push('Full name is required for non-anonymous posts')
+          }
+          if (!formData.linkedinUrl || formData.linkedinUrl.trim() === '') {
+            errors.push('LinkedIn URL is required for non-anonymous posts')
+          }
+        }
+        break
+        
+      case 2: // Company Details Step
+        if (!formData.companyName || formData.companyName.trim() === '') {
+          errors.push('Company name is required')
+        }
+        if (!formData.jobRole || formData.jobRole.trim() === '') {
+          errors.push('Job role is required')
+        }
+        if (!formData.positionType || formData.positionType === '') {
+          errors.push('Position type is required')
+        }
+        break
+        
+      case 3: // Process Details Step
+        if (!formData.numberOfRounds || formData.numberOfRounds === '') {
+          errors.push('Number of rounds is required')
+        }
+        break
+        
+      case 4: // Round Details Step
+        // Check if all rounds have both name and description
+        const numberOfRounds = parseInt(formData.numberOfRounds) || 0
+        if (numberOfRounds === 0) {
+          errors.push('Number of rounds must be selected first')
+        } else {
+          // Check if we have the correct number of rounds
+          if (formData.rounds.length !== numberOfRounds) {
+            errors.push(`Please add all ${numberOfRounds} rounds`)
+          } else {
+            // Check if all rounds have both name and description
+            const invalidRounds = formData.rounds.filter((round, index) => 
+              !round.name || round.name.trim() === '' || 
+              !round.description || round.description.trim() === ''
+            )
+            
+            if (invalidRounds.length > 0) {
+              const missingRounds = invalidRounds.map((_, index) => {
+                const roundIndex = formData.rounds.findIndex(round => 
+                  !round.name || round.name.trim() === '' || 
+                  !round.description || round.description.trim() === ''
+                )
+                return roundIndex + 1
+              })
+              errors.push(`Round ${missingRounds.join(', ')} ${missingRounds.length === 1 ? 'is' : 'are'} missing name or description`)
+            }
+          }
+        }
+        break
+        
+      case 5: // Questions Step
+        // Questions are optional, no validation needed
+        break
+        
+      case 6: // Tips Step
+        if (!formData.overallExperience || formData.overallExperience.trim() === '') {
+          errors.push('Overall experience is required')
+        } else if (formData.overallExperience.trim().length < 50) {
+          errors.push('Overall experience must be at least 50 characters long')
+        }
+        break
+        
+      default:
+        break
+    }
+    
+    // Show errors if any
+    if (errors.length > 0) {
+      toast({
+        title: 'Please complete required fields',
+        description: errors[0],
+        status: 'warning',
+        duration: 4000,
+        isClosable: true,
+      })
+      return false
+    }
+    
+    return true
   }
 
   const validateForm = () => {
@@ -218,8 +356,35 @@ const ExperienceFormSection = () => {
     setIsSubmitting(true)
 
     try {
+      // Helper function to filter out empty values
+      const filterEmptyValues = (obj) => {
+        const filtered = {}
+        Object.keys(obj).forEach(key => {
+          const value = obj[key]
+          if (value !== '' && value !== null && value !== undefined) {
+            if (Array.isArray(value)) {
+              if (key === 'rounds') {
+                // Filter out empty rounds (rounds with empty name and description)
+                const validRounds = value.filter(round => 
+                  round.name && round.name.trim() !== '' && 
+                  round.description && round.description.trim() !== ''
+                )
+                if (validRounds.length > 0) {
+                  filtered[key] = validRounds
+                }
+              } else if (value.length > 0) {
+                filtered[key] = value
+              }
+            } else {
+              filtered[key] = value
+            }
+          }
+        })
+        return filtered
+      }
+
       // Send structured data to API
-      const experienceData = {
+      const experienceData = filterEmptyValues({
         // Personal & Academic Details
         fullName: formData.fullName,
         email: formData.email,
@@ -229,8 +394,8 @@ const ExperienceFormSection = () => {
         linkedinUrl: formData.linkedinUrl,
         isAnonymous: formData.isAnonymous,
         
-        // Security
-        recaptchaToken: recaptchaToken,
+        // Security (only include in production)
+        ...(import.meta.env.DEV ? {} : { recaptchaToken: recaptchaToken }),
         
         // Company & Role Details
         companyName: formData.companyName,
@@ -258,7 +423,10 @@ const ExperienceFormSection = () => {
         resourcesUsed: formData.resourcesUsed,
         tipsForCandidates: formData.tipsForCandidates,
         mistakesToAvoid: formData.mistakesToAvoid
-      }
+      })
+      
+      // Debug: Log the data being sent
+      console.log('Sending experience data:', experienceData)
       
       await addExperience(experienceData)
       toast({
@@ -269,15 +437,58 @@ const ExperienceFormSection = () => {
       })
       navigate('/experience')
     } catch (error) {
+      console.error('Form submission error:', error)
+      
+      // Use enhanced error handling
+      const processedError = handleError(error, { 
+        context: 'experience_form_submission',
+        formData: experienceData 
+      })
+      
+      let errorMessage = getUserFriendlyMessage(processedError.type, processedError.message)
+      let errorTitle = 'Failed to share experience'
+      
+      // Handle specific error types
+      switch (processedError.type) {
+        case 'VALIDATION_ERROR':
+          errorTitle = 'Validation Error'
+          if (processedError.errors && processedError.errors.length > 0) {
+            const formattedErrors = formatValidationErrors(processedError.errors)
+            errorMessage = formattedErrors[0] // Show first error
+          }
+          break
+          
+        case 'NETWORK_ERROR':
+          errorTitle = 'Connection Error'
+          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.'
+          break
+          
+        case 'SERVER_ERROR':
+          errorTitle = 'Server Error'
+          errorMessage = 'Server is temporarily unavailable. Please try again later.'
+          break
+          
+        case 'TIMEOUT_ERROR':
+          errorTitle = 'Request Timeout'
+          errorMessage = 'Request timed out. Please try again.'
+          break
+          
+        default:
+          errorMessage = processedError.message || 'An unexpected error occurred. Please try again.'
+      }
+      
       toast({
-        title: 'Error sharing experience',
-        description: error.message,
+        title: errorTitle,
+        description: errorMessage,
         status: 'error',
-        duration: 3000,
+        duration: 7000,
         isClosable: true,
       })
-      // Reset reCAPTCHA on error
-      resetRecaptcha()
+      
+      // Reset reCAPTCHA on error (only in production)
+      if (!import.meta.env.DEV) {
+        resetRecaptcha()
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -351,13 +562,14 @@ const ExperienceFormSection = () => {
                 currentStep={currentStep}
                 totalSteps={totalSteps}
                 onStepClick={goToStep}
+                formData={formData}
               />
 
               {/* Step Content */}
               {renderStep()}
 
-              {/* reCAPTCHA */}
-              {currentStep === totalSteps && (
+              {/* reCAPTCHA - Only show in production */}
+              {currentStep === totalSteps && !import.meta.env.DEV && (
                 <Box w="full" display="flex" justifyContent="center">
                   <ReCAPTCHA
                     ref={recaptchaRef}
@@ -371,7 +583,16 @@ const ExperienceFormSection = () => {
                 </Box>
               )}
 
-              {/* Navigation Buttons */}
+              {/* Development mode - skip reCAPTCHA validation */}
+              {currentStep === totalSteps && import.meta.env.DEV && (
+                <Box w="full" display="flex" justifyContent="center" p={4}>
+                  <Text color="whiteAlpha.500" fontSize="sm">
+                    reCAPTCHA disabled in development mode
+                  </Text>
+                </Box>
+              )}
+
+              {/* Navigation Buttons - Only Previous/Next */}
               <HStack spacing={4} w="full" justify="space-between" mt={6}>
                 <Button
                   onClick={prevStep}
@@ -403,7 +624,7 @@ const ExperienceFormSection = () => {
                   Previous
                 </Button>
                 
-                {currentStep < totalSteps ? (
+                {currentStep < totalSteps && (
                   <Button
                     onClick={nextStep}
                     bg="blue.500"
@@ -423,44 +644,40 @@ const ExperienceFormSection = () => {
                   >
                     Next
                   </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    bg="blue.500"
-                    color="white"
-                    isLoading={isSubmitting}
-                    loadingText="Sharing..."
-                    _hover={{ 
-                      bg: "blue.600",
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)"
-                    }}
-                    _active={{ bg: "blue.700" }}
-                    size="lg"
-                    h={12}
-                    px={8}
-                    fontSize="md"
-                    fontWeight="600"
-                    borderRadius="xl"
-                    leftIcon={<Icon as={FaPaperPlane} />}
-                    transition="all 0.3s ease"
-                    disabled={isSubmitting}
-                    _disabled={{
-                      opacity: 0.7,
-                      cursor: "not-allowed",
-                      _hover: {
-                        bg: "blue.500",
-                        transform: "none",
-                        boxShadow: "none"
-                      }
-                    }}
-                  >
-                    Share Experience
-                  </Button>
                 )}
               </HStack>
             </VStack>
           </form>
+          
+          {/* Submit Button - Outside Form Container */}
+          {currentStep === totalSteps && (
+            <Box w="full" mt={8} display="flex" justifyContent="center">
+              <Button
+                onClick={handleSubmit}
+                bg="blue.500"
+                color="white"
+                isLoading={isSubmitting}
+                loadingText="Sharing Experience..."
+                _hover={{ 
+                  bg: "blue.600",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)"
+                }}
+                _active={{ bg: "blue.700" }}
+                size="lg"
+                h={14}
+                px={12}
+                fontSize="md"
+                fontWeight="600"
+                borderRadius="xl"
+                leftIcon={<Icon as={FaPaperPlane} />}
+                transition="all 0.3s"
+                disabled={isSubmitting}
+              >
+                Share Experience
+              </Button>
+            </Box>
+          )}
         </VStack>
       </Box>
     </MotionBox>
