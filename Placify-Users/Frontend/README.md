@@ -48,23 +48,34 @@ This frontend provides a beautiful, responsive user interface for students to sh
 ```
 Frontend/
 ├── src/
-│   ├── pages/
-│   │   ├── Home.jsx            # Landing page
-│   │   ├── Experience.jsx      # Browse experiences
-│   │   ├── PostExperience.jsx  # Share experience
-│   │   ├── Preparation.jsx     # Preparation resources
-│   │   └── Contact.jsx         # Contact form
+│   ├── components/             # Modular component system
+│   │   ├── common/            # Shared components (Layout, UI)
+│   │   └── features/         # Feature-specific components
+│   │       ├── contact/       # Contact page components
+│   │       ├── experience/   # Experience page components
+│   │       ├── preparation/  # Preparation page components
+│   │       └── home/         # Home page components
+│   ├── pages/                 # Main page components
+│   │   ├── Home.jsx          # Landing page
+│   │   ├── Experience.jsx    # Browse experiences
+│   │   ├── PostExperience.jsx # Share experience
+│   │   ├── Preparation.jsx   # Preparation resources
+│   │   └── Contact.jsx       # Contact form
 │   ├── theme/
-│   │   └── index.js            # Chakra UI theme
+│   │   └── index.js          # Chakra UI theme
 │   ├── utils/
-│   │   └── api.js              # API utilities
-│   ├── App.jsx                 # Main app component
-│   ├── main.jsx                # Entry point
-│   └── index.css                 # Global styles
-├── dist/                       # Build output
+│   │   └── api.js            # API utilities
+│   ├── App.jsx               # Main app component
+│   ├── main.jsx              # Entry point
+│   └── index.css             # Global styles
+├── dist/                     # Build output
 ├── package.json
-└── vite.config.js
+├── vite.config.js
+├── README.md                  # This file
+└── COMPONENT_STRUCTURE.md     # Detailed component documentation
 ```
+
+> 📖 **For detailed component architecture and organization, see [COMPONENT_STRUCTURE.md](./COMPONENT_STRUCTURE.md)**
 
 ## 🎨 Features
 
@@ -75,6 +86,16 @@ Frontend/
 - **Post Experience** - Share your placement experience
 - **Preparation** - Interview tips and resources
 - **Contact** - Contact form for support
+
+### Component Architecture
+
+The application follows a **feature-first component architecture** with:
+
+- **Common Components** - Shared UI elements (Navigation, Footer, etc.)
+- **Feature Components** - Domain-specific components organized by feature
+- **Page Components** - Main page implementations
+- **State Management** - Centralized state with custom hooks
+- **Path Aliases** - Clean import system with `@/` aliases
 
 ### UI Components
 

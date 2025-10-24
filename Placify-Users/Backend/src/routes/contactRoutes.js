@@ -1,4 +1,5 @@
 const express = require('express');
+const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { submitContact } = require('../controllers/contactController');
 const { validateContactForm, validateContactContent } = require('../middleware/validation');

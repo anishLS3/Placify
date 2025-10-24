@@ -94,7 +94,10 @@ app.use((req, res, next) => {
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
   delayAfter: 2, // allow 2 requests per 15 minutes, then...
-  delayMs: 500, // begin adding 500ms of delay per request above delayAfter
+  delayMs: (used, req) => {
+    const delayAfter = req.slowDown.limit;
+    return (used - delayAfter) * 500;
+  },
   maxDelayMs: 20000, // max delay of 20 seconds
   skipSuccessfulRequests: true,
   skipFailedRequests: false
