@@ -1,5 +1,4 @@
 const Experience = require('../models/Experience');
-const axios = require('axios');
 const { AppError, ERROR_TYPES, handleValidationError, handleSpamError, asyncHandler } = require('../utils/errorHandler');
 
 // Validation helper functions
@@ -305,19 +304,19 @@ exports.addExperience = async (req, res) => {
     
     // CTC validation (if provided)
     if (ctc) {
-      const internshipRegex = /^₹[\d,]+\/month$/i;
+      const internshipRegex = /^[\d,]+\/month$/i;
       const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
       
       if (positionType === 'Internship') {
         if (!internshipRegex.test(ctc)) {
-          validationErrors.push('CTC for internships must be in format "₹X,XXX/month" (e.g., ₹50,000/month)');
+          validationErrors.push('CTC for internships must be in format "X,XXX/month" (e.g., 50,000/month)');
         }
       } else if (positionType === 'Placement') {
         if (!placementRegex.test(ctc)) {
           validationErrors.push('CTC for placements must be in format "X LPA" (e.g., 6 LPA or 6.5 LPA)');
         }
       } else if (!internshipRegex.test(ctc) && !placementRegex.test(ctc)) {
-        validationErrors.push('CTC must be in format "₹X,XXX/month" for internships or "X LPA" for placements');
+        validationErrors.push('CTC must be in format "X,XXX/month" for internships or "X LPA" for placements');
       }
     }
     
@@ -342,20 +341,7 @@ exports.addExperience = async (req, res) => {
       throw handleSpamError(spamError);
     }
     
-    // Duplicate content detection
-    const existingExperience = await Experience.findOne({
-      $or: [
-        { companyName: companyName, jobRole: jobRole },
-        { overallExperience: overallExperience }
-      ]
-    });
-    
-    if (existingExperience) {
-      return res.status(400).json({
-        success: false,
-        message: 'Duplicate experience submission detected'
-      });
-    }
+    // Note: Removed duplicate validation as multiple people can get the same role at the same company
     
     // Return validation errors if any
     if (validationErrors.length > 0) {
@@ -456,8 +442,14 @@ exports.addExperience = async (req, res) => {
 
     const newExperience = new Experience(experienceData);
     const savedExperience = await newExperience.save();
+    
     res.json(savedExperience);
   } catch (error) {
+    console.error('❌ Error saving experience:', {
+      message: error.message,
+      stack: error.stack,
+      validationErrors: error.errors
+    });
     res.status(400).json({ message: error.message });
   }
 };

@@ -112,13 +112,14 @@ const experienceSchema = new mongoose.Schema({
     validate: {
       validator: function(v) {
         if (!v) return true; // Optional field
-        // For Internship: ₹X,XXX/month format
-        const internshipRegex = /^₹[\d,]+\/month$/i;
-        // For Placement: X LPA format  
+        
+        // Allow both formats - middleware will handle specific validation
         const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
-        return internshipRegex.test(v) || placementRegex.test(v);
+        const internshipRegex = /^[\d,]+\/month$/i;
+        const numericRegex = /^\d+$/;
+        return internshipRegex.test(v) || placementRegex.test(v) || numericRegex.test(v);
       },
-      message: 'CTC must be in format "₹X,XXX/month" for internships or "X LPA" for placements'
+      message: 'CTC must be in format "X,XXX/month" for internships, "X LPA" for placements, or numeric value'
     },
     maxlength: [25, 'CTC cannot exceed 25 characters']
   },

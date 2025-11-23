@@ -108,22 +108,22 @@ const Profile = () => {
   };
 
   return (
-    <Box p={8} bg="#000000" minH="100vh">
+    <Box p={{ base: 4, md: 8 }} bg="#000000" minH="100vh">
       {/* Header */}
       <Box mb={8}>
-        <Heading size="2xl" color="white" mb={2}>Admin Profile</Heading>
-        <Text color="rgba(255, 255, 255, 0.7)" fontSize="lg">
+        <Heading size={{ base: "xl", md: "2xl" }} color="white" mb={2}>Admin Profile</Heading>
+        <Text color="rgba(255, 255, 255, 0.7)" fontSize={{ base: "md", md: "lg" }}>
           Manage your account settings and preferences
         </Text>
       </Box>
 
-      <Grid templateColumns={{ base: '1fr', lg: '1fr 2fr' }} gap={6}>
+      <Grid templateColumns={{ base: '1fr', lg: '1fr 2fr' }} gap={{ base: 4, md: 6 }}>
         {/* Profile Info */}
         <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
           <CardBody>
             <VStack spacing={4}>
               <Avatar
-                size="xl"
+                size={{ base: "lg", md: "xl" }}
                 name={user?.name || 'Admin'}
                 src={user?.avatar}
                 bg="#ff9a56"

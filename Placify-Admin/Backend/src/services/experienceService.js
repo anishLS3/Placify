@@ -288,20 +288,6 @@ class ExperienceService {
     }
   }
 
-  // Get all experiences with pagination
-  async getAllExperiences(page = 1, limit = 10) {
-    try {
-      const result = await experienceRepository.findAll(page, limit);
-      
-      return {
-        success: true,
-        ...result
-      };
-    } catch (error) {
-      throw new Error(`Failed to get all experiences: ${error.message}`);
-    }
-  }
-
   // Search experiences
   async searchExperiences(query, status = null, page = 1, limit = 10) {
     try {

@@ -271,18 +271,18 @@ const Contacts = () => {
   }
 
   return (
-    <Box p={8} bg="#000000" minH="100vh">
+    <Box p={{ base: 4, md: 8 }} bg="#000000" minH="100vh">
       {/* Header */}
       <Box mb={8}>
-        <Heading size="2xl" color="white" mb={2}>Contact Management</Heading>
-        <Text color="rgba(255, 255, 255, 0.7)" fontSize="lg">
+        <Heading size={{ base: "xl", md: "2xl" }} color="white" mb={2}>Contact Management</Heading>
+        <Text color="rgba(255, 255, 255, 0.7)" fontSize={{ base: "md", md: "lg" }}>
           Manage contact form submissions and inquiries
         </Text>
       </Box>
 
       {/* Statistics */}
       {stats && (
-        <Grid templateColumns="repeat(4, 1fr)" gap={6} mb={8}>
+        <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }} gap={{ base: 4, md: 6 }} mb={8}>
           <GridItem>
             <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
               <CardBody>
@@ -336,48 +336,53 @@ const Contacts = () => {
       {/* Search and Filters */}
       <Card mb={8} bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
         <CardBody>
-          <Flex gap={4} wrap="wrap">
-            <HStack flex={1} minW="300px">
-              <RiSearchLine color="rgba(255, 255, 255, 0.7)" />
-              <Input
-                placeholder="Search by name, email, subject, or message..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                bg="rgba(255, 255, 255, 0.1)"
-                border="1px solid rgba(255, 255, 255, 0.2)"
-                color="white"
-                _placeholder={{ color: "rgba(255, 255, 255, 0.5)" }}
-                _focus={{ borderColor: "rgba(255, 255, 255, 0.4)" }}
-              />
-            </HStack>
-            
-            <Select
-              placeholder="All Statuses"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              w="200px"
-              bg="rgba(255, 255, 255, 0.1)"
-              border="1px solid rgba(255, 255, 255, 0.2)"
-              color="white"
-              _focus={{ borderColor: "rgba(255, 255, 255, 0.4)" }}
-            >
-              <option value="new" style={{backgroundColor: '#1c1c1e', color: 'white'}}>New</option>
-              <option value="in-progress" style={{backgroundColor: '#1c1c1e', color: 'white'}}>In Progress</option>
-              <option value="resolved" style={{backgroundColor: '#1c1c1e', color: 'white'}}>Resolved</option>
-              <option value="closed" style={{backgroundColor: '#1c1c1e', color: 'white'}}>Closed</option>
-            </Select>
-            
-            <Button
-              leftIcon={<RiRefreshLine />}
-              onClick={fetchContacts}
-              bg="rgba(255, 255, 255, 0.1)"
-              color="white"
-              border="1px solid rgba(255, 255, 255, 0.2)"
-              _hover={{ bg: "rgba(255, 255, 255, 0.2)" }}
-            >
-              Refresh
-            </Button>
-          </Flex>
+          <VStack spacing={4} align="stretch">
+            <Flex gap={4} wrap="wrap" direction={{ base: "column", md: "row" }}>
+              <HStack flex={1} minW={{ base: "100%", md: "300px" }}>
+                <RiSearchLine color="rgba(255, 255, 255, 0.7)" />
+                <Input
+                  placeholder="Search by name, email, subject, or message..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  bg="rgba(255, 255, 255, 0.1)"
+                  border="1px solid rgba(255, 255, 255, 0.2)"
+                  color="white"
+                  _placeholder={{ color: "rgba(255, 255, 255, 0.5)" }}
+                  _focus={{ borderColor: "rgba(255, 255, 255, 0.4)" }}
+                />
+              </HStack>
+              
+              <HStack spacing={4} w={{ base: "100%", md: "auto" }}>
+                <Select
+                  placeholder="All Statuses"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  w={{ base: "100%", md: "200px" }}
+                  bg="rgba(255, 255, 255, 0.1)"
+                  border="1px solid rgba(255, 255, 255, 0.2)"
+                  color="white"
+                  _focus={{ borderColor: "rgba(255, 255, 255, 0.4)" }}
+                >
+                  <option value="new" style={{backgroundColor: '#1c1c1e', color: 'white'}}>New</option>
+                  <option value="in-progress" style={{backgroundColor: '#1c1c1e', color: 'white'}}>In Progress</option>
+                  <option value="resolved" style={{backgroundColor: '#1c1c1e', color: 'white'}}>Resolved</option>
+                  <option value="closed" style={{backgroundColor: '#1c1c1e', color: 'white'}}>Closed</option>
+                </Select>
+                
+                <Button
+                  leftIcon={<RiRefreshLine />}
+                  onClick={fetchContacts}
+                  bg="rgba(255, 255, 255, 0.1)"
+                  color="white"
+                  border="1px solid rgba(255, 255, 255, 0.2)"
+                  _hover={{ bg: "rgba(255, 255, 255, 0.2)" }}
+                  w={{ base: "100%", md: "auto" }}
+                >
+                  Refresh
+                </Button>
+              </HStack>
+            </Flex>
+          </VStack>
         </CardBody>
       </Card>
 
@@ -398,14 +403,14 @@ const Contacts = () => {
         <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
           <CardBody p={0}>
             <Box overflowX="auto">
-              <Table variant="simple" size="md">
+              <Table variant="simple" size={{ base: "sm", md: "md" }}>
                 <Thead>
                   <Tr>
                     <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)">Contact</Th>
-                    <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)">Subject</Th>
+                    <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)" display={{ base: "none", md: "table-cell" }}>Subject</Th>
                     <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)">Status</Th>
-                    <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)">Priority</Th>
-                    <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)">Submitted</Th>
+                    <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)" display={{ base: "none", lg: "table-cell" }}>Priority</Th>
+                    <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)" display={{ base: "none", md: "table-cell" }}>Submitted</Th>
                     <Th color="rgba(255, 255, 255, 0.8)" borderColor="rgba(255, 255, 255, 0.1)">Actions</Th>
                   </Tr>
                 </Thead>
@@ -418,23 +423,23 @@ const Contacts = () => {
                           <Text fontSize="sm" color="rgba(255, 255, 255, 0.6)">{contact.email}</Text>
                         </VStack>
                       </Td>
-                      <Td borderColor="rgba(255, 255, 255, 0.1)">
+                      <Td borderColor="rgba(255, 255, 255, 0.1)" display={{ base: "none", md: "table-cell" }}>
                         <Text noOfLines={2} maxW="250px" color="rgba(255, 255, 255, 0.8)">
                           {contact.extractedSubject || contact.subject || 'No subject'}
                         </Text>
                       </Td>
                       <Td borderColor="rgba(255, 255, 255, 0.1)">{getStatusBadge(contact.status)}</Td>
-                      <Td borderColor="rgba(255, 255, 255, 0.1)">{getPriorityBadge(contact.priority)}</Td>
-                      <Td borderColor="rgba(255, 255, 255, 0.1)">
+                      <Td borderColor="rgba(255, 255, 255, 0.1)" display={{ base: "none", lg: "table-cell" }}>{getPriorityBadge(contact.priority)}</Td>
+                      <Td borderColor="rgba(255, 255, 255, 0.1)" display={{ base: "none", md: "table-cell" }}>
                         <Text fontSize="sm" color="rgba(255, 255, 255, 0.6)">
                           {new Date(contact.createdAt || contact.date).toLocaleDateString()}
                         </Text>
                       </Td>
                       <Td borderColor="rgba(255, 255, 255, 0.1)">
-                        <HStack spacing={2}>
+                        <HStack spacing={{ base: 1, md: 2 }}>
                           <IconButton
                             icon={<RiEyeLine />}
-                            size="sm"
+                            size={{ base: "xs", md: "sm" }}
                             variant="ghost"
                             color="#4299e1"
                             _hover={{ bg: "rgba(66, 153, 225, 0.2)" }}

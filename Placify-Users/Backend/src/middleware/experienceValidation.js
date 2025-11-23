@@ -108,8 +108,27 @@ const validateExperienceForm = [
 
   body('ctc')
     .optional()
-    .matches(/^\d+(\.\d+)?\s*LPA$/i)
-    .withMessage('CTC must be in format like "6 LPA" or "6.5 LPA"')
+    .custom((value, { req }) => {
+      if (!value) return true;
+      
+      const positionType = req.body.positionType;
+      
+      if (positionType === 'Placement') {
+        // Placement: X LPA format (e.g., "6 LPA", "12.5 LPA")
+        const lpaRegex = /^\d+(\.\d+)?\s*LPA$/i;
+        if (!lpaRegex.test(value)) {
+          throw new Error('For placements, CTC must be in format like "6 LPA" or "12.5 LPA"');
+        }
+      } else if (positionType === 'Internship') {
+        // Internship: X,XX,XXX/month format (e.g., "1,00,000/month", "50,000/month", "100000/month")
+        const monthlyRegex = /^[\d,]+\/month$/i;
+        if (!monthlyRegex.test(value)) {
+          throw new Error('For internships, CTC must be in format like "1,00,000/month", "50,000/month", or "100000/month"');
+        }
+      }
+      
+      return true;
+    })
     .isLength({ max: 20 })
     .withMessage('CTC cannot exceed 20 characters')
     .trim(),

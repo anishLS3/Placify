@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
@@ -16,39 +14,11 @@ const analyticsRoutes = require('./routes/analytics');
 
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
-const { socketAuth } = require('./middleware/adminAuth');
 
 // Import event system
 const eventBus = require('./utils/eventBus');
-require('./events/experienceEvents'); // Initialize event listeners
 
 const app = express();
-const httpServer = createServer(app);
-
-// Socket.IO setup with authentication
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.ADMIN_FRONTEND_URL || ["http://localhost:3001", "http://localhost:3002"],
-    methods: ["GET", "POST"]
-  }
-});
-
-// Socket authentication middleware
-io.use(socketAuth);
-
-// Socket connection handling
-io.on('connection', (socket) => {
-  console.log('Admin connected:', socket.adminId);
-  
-  socket.join('admin-room');
-  
-  socket.on('disconnect', () => {
-    console.log('Admin disconnected:', socket.adminId);
-  });
-});
-
-// Make io available globally for event emissions
-global.io = io;
 
 // Security middleware
 app.use(helmet());
@@ -118,7 +88,7 @@ app.use(errorHandler);
 
 const PORT = process.env.ADMIN_PORT || 5001;
 
-httpServer.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`🚀 Placify Admin Backend running on port ${PORT}`);
 });
 

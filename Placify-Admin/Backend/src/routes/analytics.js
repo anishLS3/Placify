@@ -138,13 +138,20 @@ class AnalyticsController {
       const { limit = 10 } = req.query;
       
       const companyStats = await Experience.aggregate([
-        { $match: { status: 'approved' } },
+        // Include all experiences, not just approved ones
+        // { $match: { status: 'approved' } }, // Removed this line to show all companies
         {
           $group: {
             _id: '$companyName',
             totalExperiences: { $sum: 1 },
             verifiedCount: {
               $sum: { $cond: [{ $eq: ['$verificationBadge', true] }, 1, 0] }
+            },
+            placementCount: {
+              $sum: { $cond: [{ $eq: ['$positionType', 'Placement'] }, 1, 0] }
+            },
+            internshipCount: {
+              $sum: { $cond: [{ $eq: ['$positionType', 'Internship'] }, 1, 0] }
             },
             roles: { $addToSet: '$jobRole' },
             avgBatch: { $avg: '$batchYear' }
@@ -155,6 +162,8 @@ class AnalyticsController {
             company: '$_id',
             totalExperiences: 1,
             verifiedCount: 1,
+            placementCount: 1,
+            internshipCount: 1,
             rolesCount: { $size: '$roles' },
             verificationRate: {
               $round: [

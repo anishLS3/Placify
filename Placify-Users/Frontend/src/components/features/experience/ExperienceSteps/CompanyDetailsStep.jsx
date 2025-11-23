@@ -10,7 +10,7 @@ const CompanyDetailsStep = ({ formData, handleChange }) => {
     
     // Clear CTC if it doesn't match the new position type format
     if (formData.ctc) {
-      const internshipRegex = /^₹[\d,]+\/month$/i;
+      const internshipRegex = /^[\d,]+\/month$/i;
       const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
       
       if (newPositionType === 'Internship' && !internshipRegex.test(formData.ctc)) {
@@ -166,17 +166,17 @@ const CompanyDetailsStep = ({ formData, handleChange }) => {
             value={formData.ctc}
             onChange={handleChange}
             placeholder={
-              formData.positionType === 'Internship' 
-                ? "₹50,000/month" 
+              formData.positionType === 'Internship'
+                ? "1,00,000/month" 
                 : formData.positionType === 'Placement'
                 ? "6 LPA"
                 : "Enter CTC"
             }
             title={
               formData.positionType === 'Internship'
-                ? "Please enter CTC in format like '₹50,000/month'"
+                ? "Please enter CTC in format like '1,00,000/month' or '50,000/month'"
                 : formData.positionType === 'Placement'
-                ? "Please enter CTC in format like '6 LPA' or '6.5 LPA'"
+                ? "Please enter CTC in format like '6 LPA' or '12.5 LPA'"
                 : "Select position type first"
             }
             maxLength={20}
@@ -194,8 +194,8 @@ const CompanyDetailsStep = ({ formData, handleChange }) => {
           {formData.positionType && (
             <Text fontSize="xs" color="whiteAlpha.500" mt={1}>
               {formData.positionType === 'Internship' 
-                ? "Format: ₹X,XXX/month (e.g., ₹50,000/month)"
-                : "Format: X LPA (e.g., 6 LPA or 6.5 LPA)"
+                ? "Format: X,XXX/month (e.g., 1,00,000/month or 50,000/month)"
+                : "Format: X LPA (e.g., 6 LPA or 12.5 LPA)"
               }
             </Text>
           )}

@@ -189,43 +189,46 @@ const ExperienceDetail = () => {
   }
 
   return (
-    <Box>
+    <Box p={{ base: 4, md: 6 }}>
       {/* Header */}
-      <HStack mb={6}>
+      <HStack mb={6} flexDirection={{ base: "column", sm: "row" }} align={{ base: "stretch", sm: "center" }} spacing={{ base: 2, sm: 4 }}>
         <Button
           as={RouterLink}
           to="/experiences"
           leftIcon={<RiArrowLeftLine />}
           variant="ghost"
-          size="sm"
+          size={{ base: "sm", md: "md" }}
+          w={{ base: "full", sm: "auto" }}
         >
           Back to Experiences
         </Button>
       </HStack>
 
       <Box mb={6}>
-        <HStack justify="space-between" mb={2}>
-          <Heading size="lg">{experience.companyName} - {experience.jobRole}</Heading>
-          <HStack>
+        <VStack align="start" spacing={4}>
+          <Heading size={{ base: "md", md: "lg" }} color="white">
+            {experience.companyName} - {experience.jobRole}
+          </Heading>
+          <HStack wrap="wrap" spacing={3}>
             {experience.verificationBadge && (
               <Badge colorScheme="blue" variant="solid">
                 <HStack spacing={1}>
                   <RiShieldCheckLine />
-                  <Text>Verified</Text>
+                  <Text fontSize={{ base: "xs", md: "sm" }}>Verified</Text>
                 </HStack>
               </Badge>
             )}
             {getStatusBadge(experience.status)}
           </HStack>
-        </HStack>
-        <Text color="gray.600">
-          Placement experience submitted by {experience.isAnonymous ? 'Anonymous' : experience.fullName}
-        </Text>
+          <Text color="rgba(255, 255, 255, 0.6)" fontSize={{ base: "sm", md: "md" }}>
+            Placement experience submitted by {experience.isAnonymous ? 'Anonymous' : experience.fullName}
+          </Text>
+        </VStack>
       </Box>
 
-      <Grid templateColumns={{ base: '1fr', lg: '2fr 1fr' }} gap={6}>
+      <Grid templateColumns={{ base: '1fr', lg: '2fr 1fr' }} gap={{ base: 4, md: 6 }}>
         {/* Main Content */}
-        <VStack spacing={6} align="stretch">
+        <VStack spacing={{ base: 4, md: 6 }} align="stretch">
           {/* Company & Position Details */}
           <Card>
             <CardHeader>

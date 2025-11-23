@@ -47,7 +47,6 @@ const PersonalDetailsStep = ({ formData, handleChange }) => {
           value={formData.email}
           onChange={handleChange}
           placeholder="your.email@example.com"
-          pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           title="Please enter a valid email address"
           maxLength={100}
           bg="whiteAlpha.100"

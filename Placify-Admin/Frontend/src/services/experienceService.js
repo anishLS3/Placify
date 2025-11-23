@@ -8,14 +8,16 @@ export const experienceService = {
     if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
     if (filters.company) params.append('company', filters.company);
+    if (filters.page) params.append('page', filters.page);
     if (filters.limit) params.append('limit', filters.limit);
-    if (filters.offset) params.append('offset', filters.offset);
     
     const url = `/admin/experiences/all?${params.toString()}`;
+    console.log('experienceService.js:15');
     console.log('API URL:', url);
     console.log('Filters passed to service:', filters);
     
     const response = await api.get(url);
+    console.log('experienceService.js:19'); 
     console.log('API Response:', response.data);
     return response.data;
   },
@@ -53,6 +55,18 @@ export const experienceService = {
       success: false,
       experiences: []
     };
+  },
+
+  // Get experiences by status
+  getByStatus: async (status, page = 1, limit = 10) => {
+    let endpoint;
+    if (status === 'pending') {
+      endpoint = `/admin/experiences/pending?page=${page}&limit=${limit}`;
+    } else {
+      endpoint = `/admin/experiences/status/${status}?page=${page}&limit=${limit}`;
+    }
+    const response = await api.get(endpoint);
+    return response.data;
   },
 
   // Get statistics
@@ -110,18 +124,9 @@ export const experienceService = {
 
   // Update experience status
   updateStatus: async (id, status, notes = '') => {
-    const response = await api.patch(`/admin/experiences/${id}`, {
-      status,
-      moderationNotes: notes
-    });
-    return response.data;
-  },
-
-  // Update experience status
-  updateStatus: async (id, status, notes = '') => {
     const response = await api.patch(`/admin/experiences/${id}/status`, {
       status,
-      notes
+      moderationNotes: notes
     });
     return response.data;
   },

@@ -390,9 +390,9 @@ const ExperienceFormSection = () => {
         email: formData.email,
         collegeName: formData.collegeName,
         branch: formData.branch,
-        batchYear: formData.batchYear,
-        linkedinUrl: formData.linkedinUrl,
-        isAnonymous: formData.isAnonymous,
+        batchYear: parseInt(formData.batchYear) || new Date().getFullYear(),
+        linkedinUrl: formData.linkedinUrl || '',
+        isAnonymous: formData.isAnonymous || false,
         
         // Security (only include in production)
         ...(import.meta.env.DEV ? {} : { recaptchaToken: recaptchaToken }),
@@ -406,23 +406,28 @@ const ExperienceFormSection = () => {
         ctc: formData.ctc,
         
         // Selection Process Details
-        numberOfRounds: formData.numberOfRounds,
-        roundTypes: formData.roundTypes,
+        numberOfRounds: parseInt(formData.numberOfRounds) || 1,
+        roundTypes: Array.isArray(formData.roundTypes) ? formData.roundTypes : (formData.roundTypes ? [formData.roundTypes] : []),
         difficultyLevel: formData.difficultyLevel,
         overallExperience: formData.overallExperience,
         
         // Detailed Round Descriptions
-        rounds: formData.rounds,
+        rounds: Array.isArray(formData.rounds) ? formData.rounds : [],
         
         // Technical & HR Questions
-        codingQuestions: formData.codingQuestions,
-        technicalQuestions: formData.technicalQuestions,
-        hrQuestions: formData.hrQuestions,
+        codingQuestions: formData.codingQuestions || '',
+        technicalQuestions: formData.technicalQuestions || '',
+        hrQuestions: formData.hrQuestions || '',
         
         // Preparation Tips
-        resourcesUsed: formData.resourcesUsed,
-        tipsForCandidates: formData.tipsForCandidates,
-        mistakesToAvoid: formData.mistakesToAvoid
+        resourcesUsed: formData.resourcesUsed || '',
+        tipsForCandidates: formData.tipsForCandidates || '',
+        mistakesToAvoid: formData.mistakesToAvoid || '',
+        
+        // Default system fields
+        date: new Date().toISOString().split('T')[0],
+        status: 'pending',
+        verificationBadge: false
       })
       
       // Debug: Log the data being sent
@@ -439,42 +444,72 @@ const ExperienceFormSection = () => {
     } catch (error) {
       console.error('Form submission error:', error)
       
-      // Use enhanced error handling
-      const processedError = handleError(error, { 
-        context: 'experience_form_submission',
-        formData: experienceData 
-      })
-      
-      let errorMessage = getUserFriendlyMessage(processedError.type, processedError.message)
+      // Extract detailed error message from backend response
+      let errorMessage = 'An unexpected error occurred. Please try again.'
       let errorTitle = 'Failed to share experience'
       
-      // Handle specific error types
-      switch (processedError.type) {
-        case 'VALIDATION_ERROR':
+      if (error.response && error.response.data) {
+        const backendError = error.response.data
+        console.log('Backend error details:', backendError)
+        
+        // Handle validation errors with detailed field information
+        if (backendError.errors && Array.isArray(backendError.errors)) {
           errorTitle = 'Validation Error'
-          if (processedError.errors && processedError.errors.length > 0) {
-            const formattedErrors = formatValidationErrors(processedError.errors)
-            errorMessage = formattedErrors[0] // Show first error
-          }
-          break
-          
-        case 'NETWORK_ERROR':
-          errorTitle = 'Connection Error'
-          errorMessage = 'Unable to connect to server. Please check your internet connection and try again.'
-          break
-          
-        case 'SERVER_ERROR':
-          errorTitle = 'Server Error'
-          errorMessage = 'Server is temporarily unavailable. Please try again later.'
-          break
-          
-        case 'TIMEOUT_ERROR':
-          errorTitle = 'Request Timeout'
-          errorMessage = 'Request timed out. Please try again.'
-          break
-          
-        default:
-          errorMessage = processedError.message || 'An unexpected error occurred. Please try again.'
+          const validationMessages = backendError.errors.map(err => {
+            if (err.field && err.message) {
+              return `${err.field}: ${err.message}`
+            }
+            return err.message || err.toString()
+          })
+          errorMessage = validationMessages.join('\n')
+        } 
+        // Handle general error messages
+        else if (backendError.message) {
+          errorMessage = backendError.message
+        }
+      }
+      // Handle network errors  
+      else if (error.message && error.message.includes('Network Error')) {
+        errorTitle = 'Connection Error'
+        errorMessage = 'Unable to connect to server. Please check your internet connection and try again.'
+      }
+      // Use enhanced error handling as fallback
+      else {
+        const processedError = handleError(error, { 
+          context: 'experience_form_submission',
+          formData: experienceData 
+        })
+        
+        errorMessage = getUserFriendlyMessage(processedError.type, processedError.message)
+        
+        // Handle specific error types
+        switch (processedError.type) {
+          case 'VALIDATION_ERROR':
+            errorTitle = 'Validation Error'
+            if (processedError.errors && processedError.errors.length > 0) {
+              const formattedErrors = formatValidationErrors(processedError.errors)
+              errorMessage = formattedErrors[0] // Show first error
+            }
+            break
+            
+          case 'NETWORK_ERROR':
+            errorTitle = 'Connection Error'
+            errorMessage = 'Unable to connect to server. Please check your internet connection and try again.'
+            break
+            
+          case 'SERVER_ERROR':
+            errorTitle = 'Server Error'
+            errorMessage = 'Server is temporarily unavailable. Please try again later.'
+            break
+            
+          case 'TIMEOUT_ERROR':
+            errorTitle = 'Request Timeout'
+            errorMessage = 'Request timed out. Please try again.'
+            break
+            
+          default:
+            errorMessage = processedError.message || 'An unexpected error occurred. Please try again.'
+        }
       }
       
       toast({

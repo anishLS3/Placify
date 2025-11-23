@@ -20,8 +20,17 @@ class ExperienceRepository {
         
       const total = await this.Experience.countDocuments({ status });
       
+      // Add 'isNew' indicator for experiences created within last 24 hours
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+      
+      const experiencesWithNewFlag = experiences.map(experience => ({
+        ...experience,
+        isNew: experience.createdAt ? new Date(experience.createdAt) > twentyFourHoursAgo : false
+      }));
+      
       return {
-        experiences,
+        experiences: experiencesWithNewFlag,
         pagination: {
           current: page,
           total: Math.ceil(total / limit),
@@ -77,6 +86,15 @@ class ExperienceRepository {
         
       const total = await this.Experience.countDocuments(filter);
       
+      // Add 'isNew' indicator for experiences created within last 24 hours
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+      
+      const experiencesWithNewFlag = experiences.map(experience => ({
+        ...experience,
+        isNew: experience.createdAt ? new Date(experience.createdAt) > twentyFourHoursAgo : false
+      }));
+      
       console.log('Repository findAll results:', { 
         experiencesCount: experiences.length, 
         totalInDB: total,
@@ -85,7 +103,7 @@ class ExperienceRepository {
       
       return {
         success: true,
-        experiences,
+        experiences: experiencesWithNewFlag,
         pagination: {
           current: page,
           total: Math.ceil(total / limit),
@@ -130,60 +148,6 @@ class ExperienceRepository {
       return experiences;
     } catch (error) {
       throw new Error(`Failed to find recent experiences: ${error.message}`);
-    }
-  }
-
-  // Find all experiences with pagination
-  async findAll(page = 1, limit = 10) {
-    try {
-      const skip = (page - 1) * limit;
-      
-      console.log('findAll called with page:', page, 'limit:', limit, 'skip:', skip);
-      
-      // Try to get total count first to verify database connection
-      const total = await this.Experience.countDocuments({});
-      console.log('Total documents in database:', total);
-      
-      if (total === 0) {
-        console.log('No documents found in database');
-        return {
-          experiences: [],
-          pagination: {
-            current: page,
-            total: 0,
-            count: 0,
-            totalRecords: 0
-          }
-        };
-      }
-      
-      const experiences = await this.Experience
-        .find({})
-        .sort({ _id: -1 }) // Sort by _id instead of createdAt
-        .skip(skip)
-        .limit(limit)
-        .lean();
-        
-      console.log('findAll results:', {
-        experiencesFound: experiences.length,
-        totalInDB: total,
-        page,
-        limit,
-        skip,
-        firstExperience: experiences[0]?._id
-      });
-      
-      return {
-        experiences,
-        pagination: {
-          current: page,
-          total: Math.ceil(total / limit),
-          count: experiences.length,
-          totalRecords: total
-        }
-      };
-    } catch (error) {
-      throw new Error(`Failed to find all experiences: ${error.message}`);
     }
   }
 
@@ -244,11 +208,17 @@ class ExperienceRepository {
         throw new Error('Experience not found');
       }
 
-      experience.verificationBadge = !experience.verificationBadge;
-      experience.moderatedBy = adminId;
+      // Use findByIdAndUpdate to avoid running full validation
+      const updatedExperience = await this.Experience.findByIdAndUpdate(
+        id,
+        {
+          verificationBadge: !experience.verificationBadge,
+          moderatedBy: adminId
+        },
+        { new: true, runValidators: false }
+      );
       
-      await experience.save();
-      return experience;
+      return updatedExperience;
     } catch (error) {
       throw new Error(`Failed to toggle verification badge: ${error.message}`);
     }
@@ -276,99 +246,37 @@ class ExperienceRepository {
   // Get analytics data
   async getAnalyticsData() {
     try {
-      // Calculate date ranges
-      const now = new Date();
-      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-
+      console.log('📊 Getting analytics data...');
+      
+      // Simple counts without complex aggregations
       const [
         totalExperiences,
         pendingCount,
         approvedCount,
         rejectedCount,
         verifiedCount,
-        recentSubmissions,
-        topCompanies,
-        // Current month counts
-        thisMonthTotal,
-        thisMonthPending,
-        thisMonthApproved,
-        thisMonthRejected,
-        // Last month counts
-        lastMonthTotal,
-        lastMonthPending,
-        lastMonthApproved,
-        lastMonthRejected
+        placementCount,
+        internshipCount
       ] = await Promise.all([
-        // Overall totals
-        this.Experience.countDocuments(),
+        this.Experience.countDocuments({}),
         this.Experience.countDocuments({ status: 'pending' }),
         this.Experience.countDocuments({ status: 'approved' }),
         this.Experience.countDocuments({ status: 'rejected' }),
         this.Experience.countDocuments({ verificationBadge: true }),
-        this.Experience.find()
-          .sort({ _id: -1 })
-          .limit(5)
-          .select('companyName jobRole status')
-          .lean(),
-        this.Experience.aggregate([
-          { $match: { status: 'approved' } },
-          { $group: { _id: '$companyName', count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-          { $limit: 5 }
-        ]),
-        // This month (using ObjectId timestamp since no createdAt field)
-        this.Experience.countDocuments({
-          _id: { $gte: new mongoose.Types.ObjectId.createFromTime(thisMonthStart.getTime() / 1000) }
-        }),
-        this.Experience.countDocuments({
-          status: 'pending',
-          _id: { $gte: new mongoose.Types.ObjectId.createFromTime(thisMonthStart.getTime() / 1000) }
-        }),
-        this.Experience.countDocuments({
-          status: 'approved',
-          _id: { $gte: new mongoose.Types.ObjectId.createFromTime(thisMonthStart.getTime() / 1000) }
-        }),
-        this.Experience.countDocuments({
-          status: 'rejected',
-          _id: { $gte: new mongoose.Types.ObjectId.createFromTime(thisMonthStart.getTime() / 1000) }
-        }),
-        // Last month (using ObjectId timestamp)
-        this.Experience.countDocuments({
-          _id: { 
-            $gte: new mongoose.Types.ObjectId.createFromTime(lastMonthStart.getTime() / 1000),
-            $lte: new mongoose.Types.ObjectId.createFromTime(lastMonthEnd.getTime() / 1000)
-          }
-        }),
-        this.Experience.countDocuments({
-          status: 'pending',
-          _id: { 
-            $gte: new mongoose.Types.ObjectId.createFromTime(lastMonthStart.getTime() / 1000),
-            $lte: new mongoose.Types.ObjectId.createFromTime(lastMonthEnd.getTime() / 1000)
-          }
-        }),
-        this.Experience.countDocuments({
-          status: 'approved',
-          _id: { 
-            $gte: new mongoose.Types.ObjectId.createFromTime(lastMonthStart.getTime() / 1000),
-            $lte: new mongoose.Types.ObjectId.createFromTime(lastMonthEnd.getTime() / 1000)
-          }
-        }),
-        this.Experience.countDocuments({
-          status: 'rejected',
-          _id: { 
-            $gte: new mongoose.Types.ObjectId.createFromTime(lastMonthStart.getTime() / 1000),
-            $lte: new mongoose.Types.ObjectId.createFromTime(lastMonthEnd.getTime() / 1000)
-          }
-        })
+        this.Experience.countDocuments({ positionType: 'Placement' }),
+        this.Experience.countDocuments({ positionType: 'Internship' })
       ]);
-
-      // Calculate percentage changes
-      const calculateChange = (current, previous) => {
-        if (previous === 0) return current > 0 ? 100 : 0;
-        return Math.round(((current - previous) / previous) * 100);
-      };
+      
+      console.log('📊 Counts:', { totalExperiences, pendingCount, approvedCount, rejectedCount, verifiedCount, placementCount, internshipCount });
+      
+      // Get recent submissions (simple find)
+      const recentSubmissions = await this.Experience.find({})
+        .sort({ _id: -1 })
+        .limit(5)
+        .select('companyName jobRole status')
+        .lean();
+        
+      console.log('📊 Recent submissions count:', recentSubmissions.length);
 
       return {
         summary: {
@@ -377,33 +285,33 @@ class ExperienceRepository {
           approved: approvedCount,
           rejected: rejectedCount,
           verified: verifiedCount,
-          // Add month-over-month changes
-          totalChange: calculateChange(thisMonthTotal, lastMonthTotal),
-          pendingChange: calculateChange(thisMonthPending, lastMonthPending),
-          approvedChange: calculateChange(thisMonthApproved, lastMonthApproved),
-          rejectedChange: calculateChange(thisMonthRejected, lastMonthRejected)
+          placement: placementCount,
+          internship: internshipCount,
+          // Simplified month changes
+          totalChange: 0,
+          pendingChange: 0,
+          approvedChange: 0,
+          rejectedChange: 0
         },
         recentSubmissions,
-        topCompanies: topCompanies.map(item => ({
-          company: item._id,
-          count: item.count
-        })),
+        topCompanies: [], // Simplified for now
         monthlyStats: {
           thisMonth: {
-            total: thisMonthTotal,
-            pending: thisMonthPending,
-            approved: thisMonthApproved,
-            rejected: thisMonthRejected
+            total: totalExperiences,
+            pending: pendingCount,
+            approved: approvedCount,
+            rejected: rejectedCount
           },
           lastMonth: {
-            total: lastMonthTotal,
-            pending: lastMonthPending,
-            approved: lastMonthApproved,
-            rejected: lastMonthRejected
+            total: 0,
+            pending: 0,
+            approved: 0,
+            rejected: 0
           }
         }
       };
     } catch (error) {
+      console.error('Analytics data error:', error);
       throw new Error(`Failed to get analytics data: ${error.message}`);
     }
   }
@@ -484,83 +392,7 @@ class ExperienceRepository {
     }
   }
 
-  // Get analytics data for dashboard
-  async getAnalyticsData() {
-    try {
-      // Use a single aggregation to get all counts efficiently
-      const analytics = await this.Experience.aggregate([
-        {
-          $facet: {
-            total: [{ $count: "count" }],
-            pending: [
-              { $match: { status: 'pending' } },
-              { $count: "count" }
-            ],
-            approved: [
-              { $match: { status: 'approved' } },
-              { $count: "count" }
-            ],
-            rejected: [
-              { $match: { status: 'rejected' } },
-              { $count: "count" }
-            ],
-            verified: [
-              { $match: { verificationBadge: true } },
-              { $count: "count" }
-            ],
-            recentExperiences: [
-              { $sort: { _id: -1 } },
-              { $limit: 5 },
-              {
-                $project: {
-                  _id: 1,
-                  companyName: 1,
-                  jobRole: 1,
-                  status: 1,
-                  verificationBadge: 1,
-                  createdDate: { $toDate: "$_id" }
-                }
-              }
-            ]
-          }
-        }
-      ]);
-
-      const result = analytics[0];
-      
-      // Extract counts safely
-      const totalCount = result.total[0]?.count || 0;
-      const pendingCount = result.pending[0]?.count || 0;
-      const approvedCount = result.approved[0]?.count || 0;
-      const rejectedCount = result.rejected[0]?.count || 0;
-      const verifiedCount = result.verified[0]?.count || 0;
-      const recentExperiences = result.recentExperiences || [];
-
-      return {
-        summary: {
-          total: totalCount,
-          pending: pendingCount,
-          approved: approvedCount,
-          rejected: rejectedCount,
-          verified: verifiedCount
-        },
-        trends: {
-          totalTrend: 0, // Simplified for now
-          pendingTrend: 0,
-          approvedTrend: 0,
-          rejectedTrend: 0
-        },
-        recentExperiences: recentExperiences,
-        metadata: {
-          lastUpdated: new Date(),
-          period: '30 days'
-        }
-      };
-    } catch (error) {
-      console.error('Analytics data error:', error);
-      throw new Error(`Failed to get analytics data: ${error.message}`);
-    }
-  }
+  // This duplicate method was removed - using the first getAnalyticsData method above
 }
 
 module.exports = new ExperienceRepository();

@@ -4,7 +4,6 @@ import { Box } from '@chakra-ui/react'
 
 // Context Providers
 import { AuthProvider } from './context/AuthContext'
-import { NotificationProvider } from './context/NotificationContext'
 
 // Components
 import LoadingSpinner from './components/common/LoadingSpinner'
@@ -75,7 +74,6 @@ function App() {
 
   return (
     <AuthProvider>
-      <NotificationProvider>
         <Box bg="gray.50" minH="100vh">
           <Routes>
             {/* Public routes */}
@@ -108,7 +106,6 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Box>
-      </NotificationProvider>
     </AuthProvider>
   )
 }

@@ -31,7 +31,9 @@ import {
   FiTrendingUp, 
   FiUsers, 
   FiCheckCircle,
-  FiClock
+  FiClock,
+  FiBriefcase,
+  FiBookOpen
 } from 'react-icons/fi';
 import {
   BarChart,
@@ -84,35 +86,20 @@ const Analytics = () => {
       // Create a delay function to space out requests
       const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
       
-      // Fallback data structure
-      const fallbackData = {
+      // Professional empty state data structure
+      const emptyStateData = {
         overview: {
-          totalExperiences: 7,
-          approvedExperiences: 7,
+          totalExperiences: 0,
+          approvedExperiences: 0,
           pendingExperiences: 0,
           rejectedExperiences: 0,
-          verifiedExperiences: 7,
-          approvalRate: 100,
+          verifiedExperiences: 0,
+          approvalRate: 0,
           averageReviewTime: 0
         },
-        submissionTrend: [
-          { 
-            date: new Date().toLocaleDateString(), 
-            submissions: 7, 
-            approved: 7, 
-            pending: 0, 
-            rejected: 0 
-          }
-        ],
-        topCompanies: [
-          { company: 'Tech Solutions', count: 2, verified: 2 },
-          { company: 'Innovation Labs', count: 2, verified: 2 },
-          { company: 'Digital Corp', count: 2, verified: 2 },
-          { company: 'StartUp Inc', count: 1, verified: 1 }
-        ],
-        statusDistribution: [
-          { name: 'Approved', value: 7, color: '#48BB78', percentage: 100 }
-        ]
+        submissionTrend: [],
+        topCompanies: [],
+        statusDistribution: []
       };
 
       // Try to fetch dashboard data first (most important)
@@ -122,8 +109,8 @@ const Analytics = () => {
         const dashboardResponse = await analyticsService.getAnalytics(timeRange);
         dashboardData = dashboardResponse.analytics || {};
       } catch (error) {
-        console.warn('Dashboard analytics failed, using fallback data');
-        setAnalytics(fallbackData);
+        console.warn('Dashboard analytics failed, showing empty state');
+        setAnalytics(emptyStateData);
         return;
       }
 
@@ -157,15 +144,19 @@ const Analytics = () => {
       const experienceData = dashboardData.experiences || {};
       const summary = experienceData.summary || {};
       
-      // Use fallback values if no data
-      const total = summary.total || 7;
-      const approved = summary.approved || 7;
+      // Use real data from API response
+      const total = summary.total || 0;
+      const approved = summary.approved || 0;
       const pending = summary.pending || 0;
       const rejected = summary.rejected || 0;
-      const verified = summary.verified || 7;
+      const verified = summary.verified || 0;
       
-      // Calculate approval rate and review time
-      const approvalRate = total > 0 ? ((approved / total) * 100).toFixed(1) : 100;
+      // Calculate placement vs internship statistics from summary data
+      const placementCount = summary.placement || 0;
+      const internshipCount = summary.internship || 0;
+      
+      // Calculate approval rate properly - show 0% when no approved experiences
+      const approvalRate = total > 0 ? ((approved / total) * 100).toFixed(1) : 0;
       const avgReviewTime = experienceData.avgReviewTime || 
         (experienceData.performance?.averageReviewTime ? 
          (experienceData.performance.averageReviewTime / (1000 * 60 * 60 * 24)).toFixed(1) : 
@@ -178,42 +169,46 @@ const Analytics = () => {
         approved: trend.approved,
         pending: trend.pending,
         rejected: trend.rejected
-      })) : [
-        { date: new Date().toLocaleDateString(), submissions: total, approved, pending, rejected }
-      ];
+      })) : [];
 
-      // Transform companies data
-      const topCompanies = companiesData.length > 0 ? companiesData.slice(0, 5).map(company => ({
+      // Transform companies data - show all companies
+      const topCompanies = companiesData.length > 0 ? companiesData.map(company => ({
         company: company.company || company._id,
         count: company.totalExperiences,
         verified: company.verifiedCount,
-        verificationRate: company.verificationRate
-      })) : fallbackData.topCompanies;
+        verificationRate: company.verificationRate,
+        placementCount: company.placementCount || 0,
+        internshipCount: company.internshipCount || 0
+      })) : [];
 
-      // Create status distribution
-      const statusDistribution = [
-        { 
-          name: 'Approved', 
-          value: approved, 
-          color: '#48BB78',
-          percentage: total > 0 ? ((approved / total) * 100).toFixed(1) : 0
-        },
-        { 
-          name: 'Pending', 
-          value: pending, 
-          color: '#ED8936',
-          percentage: total > 0 ? ((pending / total) * 100).toFixed(1) : 0
-        },
-        { 
-          name: 'Rejected', 
-          value: rejected, 
-          color: '#F56565',
-          percentage: total > 0 ? ((rejected / total) * 100).toFixed(1) : 0
+      // Create status distribution - only show if there's real data
+      const statusDistribution = [];
+      if (total > 0) {
+        if (approved > 0) {
+          statusDistribution.push({ 
+            name: 'Approved', 
+            value: approved, 
+            color: '#48BB78',
+            percentage: ((approved / total) * 100).toFixed(1)
+          });
         }
-      ].filter(item => item.value > 0);
-      
-      // Use fallback if no valid status distribution
-      const finalStatusDistribution = statusDistribution.length > 0 ? statusDistribution : fallbackData.statusDistribution;
+        if (pending > 0) {
+          statusDistribution.push({ 
+            name: 'Pending', 
+            value: pending, 
+            color: '#ED8936',
+            percentage: ((pending / total) * 100).toFixed(1)
+          });
+        }
+        if (rejected > 0) {
+          statusDistribution.push({ 
+            name: 'Rejected', 
+            value: rejected, 
+            color: '#F56565',
+            percentage: ((rejected / total) * 100).toFixed(1)
+          });
+        }
+      }
       
       const transformedData = {
         overview: {
@@ -222,44 +217,37 @@ const Analytics = () => {
           pendingExperiences: pending,
           rejectedExperiences: rejected,
           verifiedExperiences: verified,
+          placementCount: placementCount,
+          internshipCount: internshipCount,
           approvalRate,
           averageReviewTime: avgReviewTime
         },
         submissionTrend: formattedTrends,
         topCompanies: topCompanies,
-        statusDistribution: finalStatusDistribution
+        statusDistribution: statusDistribution
       };
       
       setAnalytics(transformedData);
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
       
-      // Use complete fallback data when everything fails
-      const fallbackData = {
+      // Use professional empty state when everything fails
+      const emptyStateData = {
         overview: {
-          totalExperiences: 7,
-          approvedExperiences: 7,
+          totalExperiences: 0,
+          approvedExperiences: 0,
           pendingExperiences: 0,
           rejectedExperiences: 0,
-          verifiedExperiences: 7,
-          approvalRate: 100,
+          verifiedExperiences: 0,
+          approvalRate: 0,
           averageReviewTime: 0
         },
-        submissionTrend: [
-          { date: new Date().toLocaleDateString(), submissions: 7, approved: 7, pending: 0, rejected: 0 }
-        ],
-        topCompanies: [
-          { company: 'Tech Solutions', count: 2, verified: 2 },
-          { company: 'Innovation Labs', count: 2, verified: 2 },
-          { company: 'Digital Corp', count: 2, verified: 2 },
-          { company: 'StartUp Inc', count: 1, verified: 1 }
-        ],
-        statusDistribution: [
-          { name: 'Approved', value: 7, color: '#48BB78', percentage: 100 }
-        ]
+        submissionTrend: [],
+        topCompanies: [],
+        statusDistribution: []
       };
       
-      setAnalytics(fallbackData);
+      setAnalytics(emptyStateData);
     } finally {
       setLoading(false);
     }
@@ -395,7 +383,7 @@ const Analytics = () => {
       </Box>
 
       {/* Overview Stats */}
-      <Grid templateColumns="repeat(auto-fit, minmax(200px, 1fr))" gap={6} mb={8}>
+      <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(auto-fit, minmax(200px, 1fr))" }} gap={{ base: 4, md: 6 }} mb={8}>
         <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
           <CardBody>
             <Stat>
@@ -481,6 +469,40 @@ const Analytics = () => {
             </Stat>
           </CardBody>
         </Card>
+        
+        <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
+          <CardBody>
+            <Stat>
+              <HStack>
+                <FiBriefcase color="rgba(255, 255, 255, 0.7)" />
+                <StatLabel color="rgba(255, 255, 255, 0.8)">Placements</StatLabel>
+              </HStack>
+              <StatNumber fontSize="2xl" color="white">{analytics.overview.placementCount}</StatNumber>
+              <StatHelpText>
+                <Badge colorScheme="blue" variant="subtle">
+                  Full-time placements
+                </Badge>
+              </StatHelpText>
+            </Stat>
+          </CardBody>
+        </Card>
+        
+        <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
+          <CardBody>
+            <Stat>
+              <HStack>
+                <FiBookOpen color="rgba(255, 255, 255, 0.7)" />
+                <StatLabel color="rgba(255, 255, 255, 0.8)">Internships</StatLabel>
+              </HStack>
+              <StatNumber fontSize="2xl" color="white">{analytics.overview.internshipCount}</StatNumber>
+              <StatHelpText>
+                <Badge colorScheme="teal" variant="subtle">
+                  Internship experiences
+                </Badge>
+              </StatHelpText>
+            </Stat>
+          </CardBody>
+        </Card>
       </Grid>
 
       {/* Charts */}
@@ -491,49 +513,60 @@ const Analytics = () => {
             <Heading size="md" color="white">Submission Trend</Heading>
           </CardHeader>
           <CardBody>
-            <Box h="300px">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={analytics.submissionTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(date) => date}
-                    tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
-                  />
-                  <YAxis tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }} />
-                  <Tooltip 
-                    labelFormatter={(date) => `Date: ${date}`}
-                    contentStyle={{ 
-                      backgroundColor: '#1c1c1e', 
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '8px',
-                      color: 'white'
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="submissions" 
-                    stroke="#3182CE" 
-                    strokeWidth={2}
-                    name="Total Submissions"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="approved" 
-                    stroke="#48BB78" 
-                    strokeWidth={2}
-                    name="Approved"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="pending" 
-                    stroke="#ED8936" 
-                    strokeWidth={2}
-                    name="Pending"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Box>
+            {analytics.submissionTrend.length > 0 ? (
+              <Box h="300px">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={analytics.submissionTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(date) => date}
+                      tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
+                    />
+                    <YAxis tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }} />
+                    <Tooltip 
+                      labelFormatter={(date) => `Date: ${date}`}
+                      contentStyle={{ 
+                        backgroundColor: '#1c1c1e', 
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        color: 'white'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="submissions" 
+                      stroke="#3182CE" 
+                      strokeWidth={2}
+                      name="Total Submissions"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="approved" 
+                      stroke="#48BB78" 
+                      strokeWidth={2}
+                      name="Approved"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="pending" 
+                      stroke="#ED8936" 
+                      strokeWidth={2}
+                      name="Pending"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            ) : (
+              <Flex justify="center" align="center" h="300px" direction="column">
+                <Text color="gray.500" fontSize="lg" mb={2}>
+                  No submission data yet
+                </Text>
+                <Text color="gray.600" fontSize="sm" textAlign="center">
+                  Submission trends will appear here once experiences are submitted and approved
+                </Text>
+              </Flex>
+            )}
           </CardBody>
         </Card>
 
@@ -544,45 +577,49 @@ const Analytics = () => {
           </CardHeader>
           <CardBody>
             <VStack spacing={6} align="stretch" h="300px" justify="center">
-              {analytics.statusDistribution.map((status, index) => {
-                const percentage = parseFloat(status.percentage || 0);
-                return (
-                  <Box key={index}>
-                    <Flex justify="space-between" align="center" mb={2}>
-                      <HStack>
-                        <Box w={3} h={3} borderRadius="full" bg={status.color} />
-                        <Text color="white" fontSize="sm" fontWeight="medium">
-                          {status.name}
-                        </Text>
-                      </HStack>
-                      <VStack spacing={0} align="end">
-                        <Text color="white" fontSize="lg" fontWeight="bold">
-                          {status.value}
-                        </Text>
-                        <Text color="gray.400" fontSize="xs">
-                          {percentage}%
-                        </Text>
-                      </VStack>
-                    </Flex>
-                    <Progress 
-                      value={percentage} 
-                      size="lg" 
-                      bg="rgba(255, 255, 255, 0.1)"
-                      borderRadius="full"
-                      sx={{
-                        '& > div': {
-                          bg: status.color,
-                          transition: 'all 0.3s ease'
-                        }
-                      }}
-                    />
-                  </Box>
-                );
-              })}
-              {analytics.statusDistribution.length === 0 && (
-                <Flex justify="center" align="center" h="full">
-                  <Text color="gray.500" fontSize="md">
+              {analytics.statusDistribution.length > 0 ? (
+                analytics.statusDistribution.map((status, index) => {
+                  const percentage = parseFloat(status.percentage || 0);
+                  return (
+                    <Box key={index}>
+                      <Flex justify="space-between" align="center" mb={2}>
+                        <HStack>
+                          <Box w={3} h={3} borderRadius="full" bg={status.color} />
+                          <Text color="white" fontSize="sm" fontWeight="medium">
+                            {status.name}
+                          </Text>
+                        </HStack>
+                        <VStack spacing={0} align="end">
+                          <Text color="white" fontSize="lg" fontWeight="bold">
+                            {status.value}
+                          </Text>
+                          <Text color="gray.400" fontSize="xs">
+                            {percentage}%
+                          </Text>
+                        </VStack>
+                      </Flex>
+                      <Progress 
+                        value={percentage} 
+                        size="lg" 
+                        bg="rgba(255, 255, 255, 0.1)"
+                        borderRadius="full"
+                        sx={{
+                          '& > div': {
+                            bg: status.color,
+                            transition: 'all 0.3s ease'
+                          }
+                        }}
+                      />
+                    </Box>
+                  );
+                })
+              ) : (
+                <Flex justify="center" align="center" h="full" direction="column">
+                  <Text color="gray.500" fontSize="lg" mb={2}>
                     No status data available
+                  </Text>
+                  <Text color="gray.600" fontSize="sm" textAlign="center">
+                    Experience status breakdown will appear here once submissions are received
                   </Text>
                 </Flex>
               )}
@@ -595,15 +632,15 @@ const Analytics = () => {
       <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
         <CardHeader>
           <Flex justify="space-between" align="center">
-            <Heading size="md" color="white">Top Companies</Heading>
+            <Heading size="md" color="white">All Companies</Heading>
             <Text color="gray.400" fontSize="sm">
               Based on experience submissions
             </Text>
           </Flex>
         </CardHeader>
         <CardBody>
-          <VStack spacing={4} align="stretch" maxH="300px" overflowY="auto">
-            {analytics.topCompanies.slice(0, 6).map((company, index) => {
+          <VStack spacing={4} align="stretch" maxH="400px" overflowY="auto">
+            {analytics.topCompanies.map((company, index) => {
               const maxCount = Math.max(...analytics.topCompanies.map(c => c.count));
               const percentage = maxCount > 0 ? (company.count / maxCount) * 100 : 0;
               const verificationRate = company.verified && company.count > 0 
@@ -661,25 +698,43 @@ const Analytics = () => {
                       }
                     }}
                   />
-                  <Flex justify="space-between" mt={2}>
-                    <HStack spacing={4}>
-                      <HStack spacing={1}>
-                        <Circle size="2" bg="#48BB78" />
-                        <Text color="gray.400" fontSize="xs">
-                          {company.verified || 0} verified
-                        </Text>
+                  <VStack spacing={2} mt={2}>
+                    <Flex justify="space-between" width="100%">
+                      <HStack spacing={4}>
+                        <HStack spacing={1}>
+                          <Circle size="2" bg="#48BB78" />
+                          <Text color="gray.400" fontSize="xs">
+                            {company.verified || 0} verified
+                          </Text>
+                        </HStack>
+                        <HStack spacing={1}>
+                          <Circle size="2" bg="#ED8936" />
+                          <Text color="gray.400" fontSize="xs">
+                            {company.count - (company.verified || 0)} pending
+                          </Text>
+                        </HStack>
                       </HStack>
-                      <HStack spacing={1}>
-                        <Circle size="2" bg="#ED8936" />
-                        <Text color="gray.400" fontSize="xs">
-                          {company.count - (company.verified || 0)} pending
-                        </Text>
+                      <Text color="gray.500" fontSize="xs">
+                        {percentage.toFixed(0)}% of top performer
+                      </Text>
+                    </Flex>
+                    <Flex justify="space-between" width="100%">
+                      <HStack spacing={4}>
+                        <HStack spacing={1}>
+                          <FiBriefcase size="10" color="#3182CE" />
+                          <Text color="gray.400" fontSize="xs">
+                            {company.placementCount || 0} placements
+                          </Text>
+                        </HStack>
+                        <HStack spacing={1}>
+                          <FiBookOpen size="10" color="#319795" />
+                          <Text color="gray.400" fontSize="xs">
+                            {company.internshipCount || 0} internships
+                          </Text>
+                        </HStack>
                       </HStack>
-                    </HStack>
-                    <Text color="gray.500" fontSize="xs">
-                      {percentage.toFixed(0)}% of top performer
-                    </Text>
-                  </Flex>
+                    </Flex>
+                  </VStack>
                 </Box>
               );
             })}

@@ -65,19 +65,19 @@ const Login = () => {
   }
 
   return (
-    <Box bg="#000000" minH="100vh" py={12}>
-      <Container maxW="md">
-        <VStack spacing={8}>
+    <Box bg="#000000" minH="100vh" py={{ base: 8, md: 12 }} px={{ base: 4, md: 0 }}>
+      <Container maxW={{ base: "sm", md: "md" }}>
+        <VStack spacing={{ base: 6, md: 8 }}>
           {/* Header */}
           <VStack spacing={4} textAlign="center">
             <Heading
-              size="xl"
+              size={{ base: "lg", md: "xl" }}
               color="white"
               fontFamily="heading"
             >
               Placify Admin
             </Heading>
-            <Text color="rgba(255, 255, 255, 0.7)" fontSize="lg">
+            <Text color="rgba(255, 255, 255, 0.7)" fontSize={{ base: "md", md: "lg" }}>
               Sign in to manage placement experiences
             </Text>
           </VStack>
@@ -90,9 +90,9 @@ const Login = () => {
             border="1px solid rgba(255, 255, 255, 0.1)"
             borderRadius="2xl"
           >
-            <CardBody p={8}>
+            <CardBody p={{ base: 6, md: 8 }}>
               <form onSubmit={handleSubmit(onSubmit)}>
-                <VStack spacing={6}>
+                <VStack spacing={{ base: 4, md: 6 }}>
                   {/* Error Alert */}
                   {error && (
                     <Alert status="error" bg="rgba(245, 101, 101, 0.2)" color="white" borderRadius="lg">
@@ -114,7 +114,7 @@ const Login = () => {
                     <Input
                       type="email"
                       placeholder="admin@placify.com"
-                      size="lg"
+                      size={{ base: "md", md: "lg" }}
                       borderRadius="xl"
                       bg="rgba(255, 255, 255, 0.1)"
                       border="1px solid rgba(255, 255, 255, 0.2)"

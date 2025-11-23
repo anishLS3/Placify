@@ -95,30 +95,41 @@ const InitialSetup = ({ onSetupComplete }) => {
   };
 
   return (
-    <Box bg="gray.50" minH="100vh" py={12}>
-      <Container maxW="md">
-        <VStack spacing={8}>
+    <Box bg="gray.50" minH="100vh" py={{ base: 6, md: 12 }} px={{ base: 4, sm: 6, md: 8 }}>
+      <Container maxW={{ base: "full", sm: "sm", md: "md" }}>
+        <VStack spacing={{ base: 6, md: 8 }}>
           {/* Header */}
-          <VStack spacing={4} textAlign="center">
+          <VStack spacing={{ base: 3, md: 4 }} textAlign="center">
             <Heading
-              size="xl"
+              size={{ base: "lg", md: "xl" }}
               bgGradient="linear(to-r, brand.500, accent.500)"
               bgClip="text"
               fontFamily="heading"
+              px={{ base: 4, md: 0 }}
             >
               Placify Admin Setup
             </Heading>
-            <Text color="gray.600" fontSize="lg">
+            <Text 
+              color="gray.600" 
+              fontSize={{ base: "md", md: "lg" }}
+              px={{ base: 2, md: 0 }}
+            >
               Create your administrator account to get started
             </Text>
           </VStack>
 
           {/* Setup Info */}
-          <Alert status="info" borderRadius="lg">
+          <Alert 
+            status="info" 
+            borderRadius="lg"
+            flexDirection={{ base: "column", sm: "row" }}
+            alignItems={{ base: "start", sm: "center" }}
+            textAlign={{ base: "left", sm: "left" }}
+          >
             <AlertIcon />
             <Box>
-              <AlertTitle fontSize="sm">Initial Setup Required</AlertTitle>
-              <AlertDescription fontSize="sm">
+              <AlertTitle fontSize={{ base: "sm", md: "sm" }}>Initial Setup Required</AlertTitle>
+              <AlertDescription fontSize={{ base: "xs", sm: "sm" }}>
                 This is a one-time setup to create your admin account.
                 You'll use these credentials to access the admin panel.
               </AlertDescription>
@@ -127,9 +138,9 @@ const InitialSetup = ({ onSetupComplete }) => {
 
           {/* Setup Form */}
           <Card w="full" boxShadow="xl" borderRadius="2xl">
-            <CardBody p={8}>
+            <CardBody p={{ base: 4, sm: 6, md: 8 }}>
               <form onSubmit={handleSubmit(onSubmit)}>
-                <VStack spacing={6}>
+                <VStack spacing={{ base: 4, md: 6 }}>
                   {/* Progress Bar */}
                   {setupProgress > 0 && (
                     <Box w="full">
@@ -142,12 +153,16 @@ const InitialSetup = ({ onSetupComplete }) => {
 
                   {/* Name Field */}
                   <FormControl isInvalid={errors.name}>
-                    <FormLabel fontSize="sm" fontWeight="600" color="gray.700">
+                    <FormLabel 
+                      fontSize={{ base: "sm", md: "sm" }} 
+                      fontWeight="600" 
+                      color="gray.700"
+                    >
                       Full Name
                     </FormLabel>
                     <Input
                       placeholder="Enter your full name"
-                      size="lg"
+                      size={{ base: "md", md: "lg" }}
                       borderRadius="xl"
                       {...register('name', {
                         required: 'Name is required',
@@ -157,20 +172,24 @@ const InitialSetup = ({ onSetupComplete }) => {
                         }
                       })}
                     />
-                    <FormErrorMessage>
+                    <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>
                       {errors.name && errors.name.message}
                     </FormErrorMessage>
                   </FormControl>
 
                   {/* Email Field */}
                   <FormControl isInvalid={errors.email}>
-                    <FormLabel fontSize="sm" fontWeight="600" color="gray.700">
+                    <FormLabel 
+                      fontSize={{ base: "sm", md: "sm" }} 
+                      fontWeight="600" 
+                      color="gray.700"
+                    >
                       Email Address
                     </FormLabel>
                     <Input
                       type="email"
                       placeholder="admin@yourcompany.com"
-                      size="lg"
+                      size={{ base: "md", md: "lg" }}
                       borderRadius="xl"
                       {...register('email', {
                         required: 'Email is required',
@@ -180,20 +199,24 @@ const InitialSetup = ({ onSetupComplete }) => {
                         }
                       })}
                     />
-                    <FormErrorMessage>
+                    <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>
                       {errors.email && errors.email.message}
                     </FormErrorMessage>
                   </FormControl>
 
                   {/* Password Field */}
                   <FormControl isInvalid={errors.password}>
-                    <FormLabel fontSize="sm" fontWeight="600" color="gray.700">
+                    <FormLabel 
+                      fontSize={{ base: "sm", md: "sm" }} 
+                      fontWeight="600" 
+                      color="gray.700"
+                    >
                       Password
                     </FormLabel>
                     <Input
                       type="password"
                       placeholder="Create a strong password"
-                      size="lg"
+                      size={{ base: "md", md: "lg" }}
                       borderRadius="xl"
                       {...register('password', {
                         required: 'Password is required',
@@ -207,26 +230,30 @@ const InitialSetup = ({ onSetupComplete }) => {
                         }
                       })}
                     />
-                    <FormErrorMessage>
+                    <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>
                       {errors.password && errors.password.message}
                     </FormErrorMessage>
                   </FormControl>
 
                   {/* Confirm Password Field */}
                   <FormControl isInvalid={errors.confirmPassword}>
-                    <FormLabel fontSize="sm" fontWeight="600" color="gray.700">
+                    <FormLabel 
+                      fontSize={{ base: "sm", md: "sm" }} 
+                      fontWeight="600" 
+                      color="gray.700"
+                    >
                       Confirm Password
                     </FormLabel>
                     <Input
                       type="password"
                       placeholder="Confirm your password"
-                      size="lg"
+                      size={{ base: "md", md: "lg" }}
                       borderRadius="xl"
                       {...register('confirmPassword', {
                         required: 'Please confirm your password'
                       })}
                     />
-                    <FormErrorMessage>
+                    <FormErrorMessage fontSize={{ base: "xs", md: "sm" }}>
                       {errors.confirmPassword && errors.confirmPassword.message}
                     </FormErrorMessage>
                   </FormControl>
@@ -234,12 +261,14 @@ const InitialSetup = ({ onSetupComplete }) => {
                   {/* Submit Button */}
                   <Button
                     type="submit"
-                    size="lg"
+                    size={{ base: "md", md: "lg" }}
                     w="full"
                     borderRadius="xl"
                     isLoading={isSubmitting}
                     loadingText="Setting up..."
                     colorScheme="brand"
+                    minH={{ base: "44px", md: "48px" }}
+                    fontSize={{ base: "sm", md: "md" }}
                     _hover={{
                       transform: 'translateY(-2px)',
                       boxShadow: 'lg'
@@ -254,7 +283,12 @@ const InitialSetup = ({ onSetupComplete }) => {
           </Card>
 
           {/* Footer */}
-          <Text fontSize="sm" color="gray.500" textAlign="center">
+          <Text 
+            fontSize={{ base: "xs", md: "sm" }} 
+            color="gray.500" 
+            textAlign="center"
+            px={{ base: 4, md: 0 }}
+          >
             This will create your administrator account for Placify
           </Text>
         </VStack>

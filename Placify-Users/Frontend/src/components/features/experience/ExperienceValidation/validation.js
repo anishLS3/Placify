@@ -16,8 +16,8 @@ export const validateLinkedInUrl = (url) => {
 export const validateCTC = (ctc, positionType) => {
   if (!ctc) return true; // Optional field
   
-  // For Internship: ₹X,XXX/month format
-  const internshipRegex = /^₹[\d,]+\/month$/i;
+  // For Internship: X,XXX/month format
+  const internshipRegex = /^[\d,]+\/month$/i;
   // For Placement: X LPA format
   const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
   
@@ -118,7 +118,7 @@ export const validateExperienceForm = (formData) => {
   // CTC validation (if provided)
   if (formData.ctc && !validateCTC(formData.ctc, formData.positionType)) {
     if (formData.positionType === 'Internship') {
-      validationErrors.push('CTC must be in format "₹X,XXX/month" (e.g., ₹50,000/month)');
+      validationErrors.push('CTC must be in format "X,XXX/month" (e.g., 50,000/month)');
     } else if (formData.positionType === 'Placement') {
       validationErrors.push('CTC must be in format "X LPA" (e.g., 6 LPA or 6.5 LPA)');
     } else {

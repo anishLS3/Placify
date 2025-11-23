@@ -437,3 +437,119 @@ select:focus {
 .apple-shadow-xl {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  /* Mobile-specific styles */
+  .mobile-hide {
+    display: none !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+  }
+  
+  .mobile-padding {
+    padding: 16px !important;
+  }
+  
+  .mobile-margin {
+    margin: 8px !important;
+  }
+  
+  /* Responsive text sizes */
+  .mobile-text-sm {
+    font-size: 14px !important;
+  }
+  
+  .mobile-text-xs {
+    font-size: 12px !important;
+  }
+  
+  /* Mobile-optimized buttons */
+  .mobile-button {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+  
+  /* Touch-friendly spacing */
+  .mobile-touch-spacing {
+    margin: 12px 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Small mobile optimizations */
+  .small-mobile-hide {
+    display: none !important;
+  }
+  
+  .small-mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  .small-mobile-full {
+    width: 100% !important;
+    margin: 4px 0 !important;
+  }
+}
+
+/* Tablet-specific styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tablet-hide {
+    display: none !important;
+  }
+  
+  .tablet-show {
+    display: block !important;
+  }
+}
+
+/* Desktop-specific styles */
+@media (min-width: 1025px) {
+  .desktop-only {
+    display: block !important;
+  }
+  
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* High-DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders and shadows for retina displays */
+  .apple-glass {
+    border-width: 0.5px;
+  }
+  
+  .glass-effect {
+    border-width: 0.5px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode optimizations (already default) */
+@media (prefers-color-scheme: dark) {
+  /* Additional dark mode refinements can go here */
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    color: black !important;
+    background: white !important;
+  }
+}

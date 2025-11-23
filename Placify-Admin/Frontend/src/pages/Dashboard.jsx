@@ -25,6 +25,7 @@ import {
 } from 'react-icons/ri';
 import { Link as RouterLink } from 'react-router-dom';
 import { experienceService } from '../services/experienceService';
+import { analyticsService } from '../services/analyticsService';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const Dashboard = () => {
@@ -48,36 +49,44 @@ const Dashboard = () => {
         }
         
         // Add delay between API calls to prevent rate limiting
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         if (isCancelled) return;
         
-        console.log('Fetching all experiences...');
-        const experiencesData = await experienceService.getAll({ limit: 50 });
-        
-        if (experiencesData.success && experiencesData.experiences) {
-          const experiences = experiencesData.experiences;
-          console.log('Experiences data received:', experiences);
-          
-          const total = experiences.length;
-          const pending = experiences.filter(exp => exp.status === 'pending').length;
-          const approved = experiences.filter(exp => exp.status === 'approved').length;
-          const rejected = experiences.filter(exp => exp.status === 'rejected').length;
-          
-          console.log('Calculated stats:', { total, pending, approved, rejected });
-          
-          if (total === 0) {
-            console.log('No experiences in API response, using current real data');
-            const currentStats = {
-              total: 7,
-              pending: 0,
-              approved: 7,
-              rejected: 0
-            };
-            
-            setStats(currentStats);
+        console.log('Fetching dashboard stats...');
+        // Try the dashboard stats endpoint first
+        try {
+          const statsResponse = await experienceService.getStats();
+          if (statsResponse && (statsResponse.total > 0 || statsResponse.pending > 0 || statsResponse.approved > 0)) {
+            console.log('Dashboard stats from stats endpoint:', statsResponse);
+            setStats({
+              total: statsResponse.total || 0,
+              pending: statsResponse.pending || 0,
+              approved: statsResponse.approved || 0,
+              rejected: statsResponse.rejected || 0
+            });
             return;
           }
+        } catch (error) {
+          console.log('Stats endpoint failed, trying alternative approach:', error.message);
+        }
+        
+        console.log('Fetching all experiences for dashboard stats...');
+        // Fetch all experiences without pagination to get accurate counts
+        const [allExperiences, pendingExperiences, approvedExperiences, rejectedExperiences] = await Promise.all([
+          experienceService.getAll({ limit: 1000 }), // Get all experiences
+          experienceService.getByStatus('pending', 1, 1000),
+          experienceService.getByStatus('approved', 1, 1000), 
+          experienceService.getByStatus('rejected', 1, 1000)
+        ]);
+        
+        if (allExperiences.success) {
+          const total = allExperiences.pagination?.totalRecords || allExperiences.experiences?.length || 0;
+          const pending = pendingExperiences.success ? (pendingExperiences.pagination?.totalRecords || pendingExperiences.experiences?.length || 0) : 0;
+          const approved = approvedExperiences.success ? (approvedExperiences.pagination?.totalRecords || approvedExperiences.experiences?.length || 0) : 0;
+          const rejected = rejectedExperiences.success ? (rejectedExperiences.pagination?.totalRecords || rejectedExperiences.experiences?.length || 0) : 0;
+          
+          console.log('Dashboard stats calculated from experiences API:', { total, pending, approved, rejected });
           
           setStats({
             total,
@@ -85,55 +94,27 @@ const Dashboard = () => {
             approved,
             rejected
           });
-          
-          console.log('Dashboard stats calculated:', { total, pending, approved, rejected });
         } else {
-          throw new Error('Primary API failed');
+          throw new Error('Experiences API failed');
         }
         
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
         
-        const currentStats = {
-          total: 7,
+        // Show accurate empty state - no fake approved data
+        const emptyStats = {
+          total: 0,
           pending: 0,
-          approved: 7,
+          approved: 0,
           rejected: 0
         };
         
-        setStats(currentStats);
-        console.log('Using current real stats:', currentStats);
+        setStats(emptyStats);
+        console.log('Using empty state (no data available):', emptyStats);
         
         if (!recentExperiences.length) {
-          setRecentExperiences([
-            {
-              _id: '1',
-              company: 'Tech Solutions',
-              role: 'Software Engineer',
-              studentName: 'Student A',
-              status: 'approved',
-              duration: 'Full-time',
-              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
-            },
-            {
-              _id: '2',
-              company: 'Innovation Labs', 
-              role: 'Frontend Developer',
-              studentName: 'Student B',
-              status: 'approved',
-              duration: 'Internship',
-              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString()
-            },
-            {
-              _id: '3',
-              company: 'Digital Corp',
-              role: 'Backend Developer', 
-              studentName: 'Student C',
-              status: 'approved',
-              duration: 'Part-time',
-              createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString()
-            }
-          ]);
+          // Don't show fake data - keep empty for professional appearance
+          setRecentExperiences([]);
         }
       } finally {
         setLoading(false);
@@ -164,7 +145,15 @@ const Dashboard = () => {
       </Box>
 
       {/* Simple Stats Cards */}
-      <Grid templateColumns="repeat(4, 1fr)" gap={8} mb={10}>
+      <Grid 
+        templateColumns={{ 
+          base: "1fr", 
+          sm: "repeat(2, 1fr)", 
+          lg: "repeat(4, 1fr)" 
+        }} 
+        gap={{ base: 4, md: 8 }} 
+        mb={10}
+      >
         <Card bg="rgba(28, 28, 30, 0.8)" border="1px solid rgba(255, 255, 255, 0.1)">
           <CardBody>
             <Stat>

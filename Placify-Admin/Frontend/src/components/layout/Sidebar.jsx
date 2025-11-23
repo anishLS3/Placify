@@ -19,12 +19,14 @@ import {
   RiLogoutBoxLine
 } from 'react-icons/ri';
 import { useAuth } from '../../context/AuthContext';
-import { useNotifications } from '../../context/NotificationContext';
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const location = useLocation();
   const { logout } = useAuth();
-  const { unreadCount } = useNotifications();
+
+  const handleNavClick = () => {
+    if (onClose) onClose();
+  };
 
   const navItems = [
     {
@@ -35,8 +37,7 @@ const Sidebar = () => {
     {
       label: 'Experiences',
       icon: RiFileTextLine,
-      path: '/experiences',
-      badge: unreadCount > 0 ? unreadCount : null
+      path: '/experiences'
     },
     {
       label: 'Contacts',
@@ -61,11 +62,11 @@ const Sidebar = () => {
 
   return (
     <Box
-      w="260px"
+      w={{ base: "100%", lg: "260px" }}
       bg="#1c1c1e"
       borderRight="1px"
       borderColor="rgba(255, 255, 255, 0.1)"
-      p={6}
+      p={{ base: 4, lg: 6 }}
       display="flex"
       flexDirection="column"
       h="full"
@@ -105,6 +106,7 @@ const Sidebar = () => {
               bg={isActive ? 'brand.500' : 'transparent'}
               color={isActive ? 'white' : 'white'}
               className="apple-button"
+              onClick={handleNavClick}
               _hover={{
                 bg: isActive ? 'brand.500' : 'whiteAlpha.100',
                 transform: 'translateX(4px)',

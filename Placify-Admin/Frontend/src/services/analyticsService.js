@@ -30,7 +30,7 @@ export const analyticsService = {
 
   // Get company statistics
   getCompanyStats: async (timeRange = '30d') => {
-    const response = await api.get(`/admin/analytics/companies?limit=10`);
+    const response = await api.get(`/admin/analytics/companies?limit=50`);
     return response.data;
   },
 
