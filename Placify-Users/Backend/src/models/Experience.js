@@ -109,8 +109,18 @@ const experienceSchema = new mongoose.Schema({
     type: String,
     required: false,
     trim: true,
-    match: [/^\d+(\.\d+)?\s*LPA$/i, 'CTC must be in format like "6 LPA" or "6.5 LPA"'],
-    maxlength: [20, 'CTC cannot exceed 20 characters']
+    validate: {
+      validator: function(v) {
+        if (!v) return true; // Optional field
+        // For Internship: ₹X,XXX/month format
+        const internshipRegex = /^₹[\d,]+\/month$/i;
+        // For Placement: X LPA format  
+        const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
+        return internshipRegex.test(v) || placementRegex.test(v);
+      },
+      message: 'CTC must be in format "₹X,XXX/month" for internships or "X LPA" for placements'
+    },
+    maxlength: [25, 'CTC cannot exceed 25 characters']
   },
   
   // Selection Process Details
@@ -208,7 +218,42 @@ const experienceSchema = new mongoose.Schema({
   date: {
     type: Date,
     default: Date.now
+  },
+  
+  // Admin moderation fields
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  verificationBadge: {
+    type: Boolean,
+    default: false
+  },
+  moderatedBy: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  moderationNotes: {
+    type: String,
+    required: false,
+    trim: true,
+    maxlength: [1000, 'Moderation notes cannot exceed 1000 characters']
+  },
+  approvedAt: {
+    type: Date,
+    required: false
+  },
+  rejectedAt: {
+    type: Date,
+    required: false
   }
 });
+
+// Index for efficient admin queries
+experienceSchema.index({ status: 1, createdAt: -1 });
+experienceSchema.index({ verificationBadge: 1 });
+experienceSchema.index({ moderatedBy: 1 });
 
 module.exports = mongoose.model('Experience', experienceSchema);

@@ -1,0 +1,439 @@
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+html {
+  scroll-behavior: smooth;
+  overflow-y: scroll;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: #000000;
+  color: white;
+}
+
+/* Remove any white space */
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100%;
+}
+
+/* Ensure no white space */
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block;
+  background-color: #000000;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar - Apple style */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Smooth transitions */
+a, button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Selection color - Apple blue */
+::selection {
+  background-color: #007AFF;
+  color: white;
+}
+
+/* Apple-style blur effects */
+.glass-effect {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.apple-glass {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Apple-style button animations */
+.apple-button {
+  transform: scale(1);
+  transition: all 0.15s ease-out;
+}
+
+.apple-button:active {
+  transform: scale(0.95);
+}
+
+/* Apple-style card hover effects */
+.apple-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apple-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Apple-style focus states */
+.chakra-input:focus,
+.chakra-select:focus,
+.chakra-textarea:focus {
+  border-color: #007AFF !important;
+  box-shadow: 0 0 0 1px #007AFF !important;
+}
+
+/* Apple-style table rows */
+.chakra-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Apple-style modal backdrop */
+.chakra-modal__overlay {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Apple-style loading spinner */
+@keyframes apple-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.apple-spinner {
+  animation: apple-spin 1s linear infinite;
+}
+
+/* Apple-style fade in animation */
+@keyframes apple-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.apple-fade-in {
+  animation: apple-fade-in 0.5s ease-out;
+}
+
+/* Apple-style gradient backgrounds */
+.apple-gradient-blue {
+  background: linear-gradient(135deg, #007AFF, #5856D6);
+}
+
+.apple-gradient-green {
+  background: linear-gradient(135deg, #30D158, #32D74B);
+}
+
+.apple-gradient-red {
+  background: linear-gradient(135deg, #FF3B30, #FF453A);
+}
+
+.apple-gradient-orange {
+  background: linear-gradient(135deg, #FF9500, #FFCC02);
+}
+
+/* Apple-style text styles */
+.text-primary {
+  color: #ffffff;
+}
+
+.text-secondary {
+  color: rgba(235, 235, 245, 0.6);
+}
+
+.text-tertiary {
+  color: rgba(235, 235, 245, 0.3);
+}
+
+/* Apple-style spacing */
+.apple-spacing-sm { margin: 8px; }
+.apple-spacing-md { margin: 16px; }
+.apple-spacing-lg { margin: 24px; }
+.apple-spacing-xl { margin: 32px; }
+
+/* Apple-style border radius */
+.apple-radius-sm { border-radius: 8px; }
+.apple-radius-md { border-radius: 12px; }
+.apple-radius-lg { border-radius: 16px; }
+.apple-radius-xl { border-radius: 20px; }
+
+/* Apple-style glass card effects */
+.apple-glass-card {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.apple-glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+.apple-glass-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Modern progress bars */
+.chakra-progress {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.chakra-progress__track {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Gradient text effects */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced card hover effects */
+.dashboard-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Floating elements */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Pulse animation for status indicators */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.status-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Enhanced button gradients */
+.gradient-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gradient-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Apple-style scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Modern badge styles */
+.chakra-badge {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Enhanced focus states */
+.chakra-button:focus,
+.chakra-input:focus,
+.chakra-select:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Input and form element enhancements for dark theme */
+.chakra-input__left-element,
+.chakra-input__right-element {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.chakra-select__wrapper {
+  color: white !important;
+}
+
+.chakra-select__icon-wrapper {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Ensure placeholder text is visible */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
+}
+
+/* Better focus states for form elements */
+input:focus,
+textarea:focus,
+select:focus {
+  color: white !important;
+  background-color: rgba(28, 28, 30, 0.9) !important;
+}
+
+/* Autocomplete styling for dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1c1c1e inset !important;
+  -webkit-text-fill-color: white !important;
+  background-color: transparent !important;
+}
+
+/* Date and time inputs */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color: white !important;
+  background-color: rgba(28, 28, 30, 0.8) !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+/* Select dropdown options */
+option {
+  background-color: #1c1c1e !important;
+  color: white !important;
+}
+
+/* Checkbox and radio buttons */
+.chakra-checkbox__control,
+.chakra-radio__control {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.chakra-checkbox__control[data-checked],
+.chakra-radio__control[data-checked] {
+  background-color: #007AFF !important;
+  border-color: #007AFF !important;
+}
+
+/* Apple-style animations for form interactions */
+@keyframes inputFocus {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  animation: inputFocus 0.2s ease-out;
+}
+
+/* Enhanced text contrast for better readability */
+.chakra-input,
+.chakra-textarea,
+.chakra-select {
+  font-weight: 400 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Form labels with better contrast */
+.chakra-form__label {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+/* Error states */
+.chakra-form__error-message {
+  color: #FF3B30 !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+
+/* Helper text */
+.chakra-form__helper-text {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 12px !important;
+}
+
+.apple-shadow-xl {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}

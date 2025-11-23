@@ -13,11 +13,6 @@ const validateLinkedInUrl = (url) => {
   return linkedinRegex.test(url)
 }
 
-const validateCTC = (ctc) => {
-  const ctcRegex = /^\d+(\.\d+)?\s*LPA$/i
-  return ctcRegex.test(ctc)
-}
-
 // Enhanced input sanitization with Unicode support
 const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input
@@ -177,24 +172,58 @@ const verifyRecaptcha = async (token) => {
   }
 }
 
-// Get all experiences
+// Get all approved and verified experiences
 exports.getExperiences = async (req, res) => {
   try {
-    const experiences = await Experience.find()
-      .select('-__v') // Exclude version field
-      .sort({ date: -1 })
-      .limit(100); // Limit to prevent large responses
+    const {
+      page = 1,
+      limit = 100,
+      company,
+      role,
+      positionType,
+      sortBy = 'date',
+      sortOrder = 'desc'
+    } = req.query;
+
+    // Build filter for approved AND verified experiences only
+    const filter = { 
+      status: 'approved',
+      verificationBadge: true 
+    };
     
+    if (company) {
+      filter.companyName = { $regex: company, $options: 'i' };
+    }
+    if (role) {
+      filter.jobRole = { $regex: role, $options: 'i' };
+    }
+    if (positionType) {
+      filter.positionType = positionType;
+    }
+
+    // Build sort object
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+    // Get experiences with all fields including verificationBadge
+    const experiences = await Experience
+      .find(filter)
+      .sort(sort)
+      .limit(parseInt(limit))
+      .select('-__v') // Exclude version field but include verificationBadge
+      .lean();
+
     res.json({
       success: true,
       count: experiences.length,
       data: experiences
     });
+
   } catch (error) {
     console.error('Get experiences error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Internal server error. Please try again later.' 
+      message: 'Internal server error. Please try again later.'
     });
   }
 };
@@ -275,8 +304,21 @@ exports.addExperience = async (req, res) => {
     }
     
     // CTC validation (if provided)
-    if (ctc && !validateCTC(ctc)) {
-      validationErrors.push('CTC must be in format like "6 LPA" or "6.5 LPA"')
+    if (ctc) {
+      const internshipRegex = /^₹[\d,]+\/month$/i;
+      const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
+      
+      if (positionType === 'Internship') {
+        if (!internshipRegex.test(ctc)) {
+          validationErrors.push('CTC for internships must be in format "₹X,XXX/month" (e.g., ₹50,000/month)');
+        }
+      } else if (positionType === 'Placement') {
+        if (!placementRegex.test(ctc)) {
+          validationErrors.push('CTC for placements must be in format "X LPA" (e.g., 6 LPA or 6.5 LPA)');
+        }
+      } else if (!internshipRegex.test(ctc) && !placementRegex.test(ctc)) {
+        validationErrors.push('CTC must be in format "₹X,XXX/month" for internships or "X LPA" for placements');
+      }
     }
     
     // Difficulty level validation (if provided)

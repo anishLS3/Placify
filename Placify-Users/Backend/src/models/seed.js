@@ -23,6 +23,8 @@ const sampleExperiences = [
     numberOfRounds: 3,
     roundTypes: ["Aptitude", "Coding", "Technical"],
     difficultyLevel: "Medium",
+    verificationBadge: true, // Admin verified this experience
+    status: "approved",
     overallExperience:
       "The process was smooth, and the interviewers were friendly. The focus was on coding and analytical thinking rather than syntax perfection.",
     rounds: [
@@ -68,6 +70,7 @@ const sampleExperiences = [
     numberOfRounds: 2,
     roundTypes: ["Aptitude", "HR"],
     difficultyLevel: "Easy",
+    status: "approved",
     overallExperience:
       "It was my first interview experience. The panel was encouraging and the questions were mostly conceptual.",
     rounds: [
@@ -103,10 +106,12 @@ const sampleExperiences = [
     positionType: "Internship",
     interviewType: "Off-Campus",
     jobLocation: "Remote",
-    ctc: "$6,000/month",
+    ctc: "₹2,50,000/month",
     numberOfRounds: 2,
     roundTypes: ["Coding", "Technical"],
     difficultyLevel: "Hard",
+    verificationBadge: true, // Admin verified this experience
+    status: "approved",
     overallExperience:
       "A very professional and interactive experience. The interviewers emphasized logical thinking and teamwork.",
     rounds: [
@@ -145,6 +150,8 @@ const sampleExperiences = [
     numberOfRounds: 3,
     roundTypes: ["Coding", "Technical", "HR"],
     difficultyLevel: "Hard",
+    verificationBadge: true, // Admin verified this experience
+    status: "approved",
     overallExperience:
       "Challenging but rewarding experience. Questions were practical and deep in logic.",
     rounds: [
@@ -189,6 +196,7 @@ const sampleExperiences = [
     numberOfRounds: 2,
     roundTypes: ["Aptitude", "Technical"],
     difficultyLevel: "Easy",
+    status: "approved",
     overallExperience:
       "Very beginner-friendly process, focusing more on conceptual clarity and communication.",
     rounds: [
@@ -224,10 +232,11 @@ const sampleExperiences = [
     positionType: "Internship",
     interviewType: "Off-Campus",
     jobLocation: "Remote",
-    ctc: "$5,500/month",
+    ctc: "₹2,30,000/month",
     numberOfRounds: 3,
     roundTypes: ["Coding", "Technical", "HR"],
     difficultyLevel: "Hard",
+    status: "approved",
     overallExperience:
       "Highly technical interview focused on problem-solving, system design, and communication.",
     rounds: [
@@ -253,6 +262,57 @@ const sampleExperiences = [
     tipsForCandidates: "Focus on clarity and system thinking.",
     mistakesToAvoid: "Skipping mock interviews.",
     date: "2025-09-02",
+  },
+  {
+    fullName: "Priya Singh",
+    email: "priya.singh@gmail.com",
+    collegeName: "Indian Institute of Technology, Delhi",
+    branch: "CSE",
+    batchYear: 2024,
+    linkedinUrl: "https://www.linkedin.com/in/priyasingh/",
+    isAnonymous: false,
+    companyName: "Goldman Sachs",
+    jobRole: "Software Engineer",
+    positionType: "Placement",
+    interviewType: "On-Campus",
+    jobLocation: "Mumbai",
+    ctc: "45 LPA",
+    numberOfRounds: 4,
+    roundTypes: ["Aptitude", "Coding", "Technical", "HR"],
+    difficultyLevel: "Hard",
+    verificationBadge: true,
+    status: "approved",
+    overallExperience:
+      "Very challenging process with focus on algorithmic thinking and system design. The interviewers were thorough and tested both technical and problem-solving skills.",
+    rounds: [
+      {
+        name: "Online Assessment",
+        description:
+          "3 coding questions on dynamic programming, graphs, and array manipulation. Also included quantitative aptitude.",
+      },
+      {
+        name: "Technical Round 1",
+        description:
+          "Deep dive into data structures, algorithms, and system design. Asked to design a trading system.",
+      },
+      {
+        name: "Technical Round 2",
+        description:
+          "Focus on problem-solving approach, code optimization, and software engineering principles.",
+      },
+      {
+        name: "HR Round",
+        description:
+          "Behavioral questions, interest in finance, and cultural fit assessment.",
+      },
+    ],
+    codingQuestions: "Maximum subarray sum, design LRU cache, implement trie.",
+    technicalQuestions: "Explain database indexing, system design for high-frequency trading.",
+    hrQuestions: "Why Goldman Sachs? How do you handle pressure?",
+    resourcesUsed: "Cracking the Coding Interview, LeetCode premium, GeeksforGeeks",
+    tipsForCandidates: "Strong foundation in algorithms and system design is crucial. Practice explaining your thought process clearly.",
+    mistakesToAvoid: "Don't rush into coding without understanding the problem completely.",
+    date: "2024-11-15",
   },
 ];
 

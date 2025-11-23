@@ -3,6 +3,7 @@ import {
   VStack, HStack, Text, Box, Icon 
 } from '@chakra-ui/react'
 import { FaLinkedin } from 'react-icons/fa'
+import VerificationBadge from '../../../common/VerificationBadge'
 
 const ExperienceDetailsModal = ({ 
   isOpen, 
@@ -14,13 +15,32 @@ const ExperienceDetailsModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
       <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(10px)" />
-      <ModalContent bg="white" borderRadius="2xl" mx={4}>
+      <ModalContent bg="white" borderRadius="2xl" mx={4} position="relative">
+        {/* Verification Badge for Modal */}
+        {selectedExperience.verificationBadge && (
+          <VerificationBadge 
+            size="lg" 
+            top={4} 
+            right={4}
+            position="absolute"
+          />
+        )}
+        
         <ModalHeader pb={2}>
           <VStack align="start" spacing={2}>
             <HStack spacing={3}>
               <Text fontSize="2xl" fontWeight="600" color="gray.900">
                 {selectedExperience.fullName}
               </Text>
+              {selectedExperience.verificationBadge && (
+                <VerificationBadge 
+                  size="sm" 
+                  position="relative"
+                  top={0}
+                  right={0}
+                  showTooltip={true}
+                />
+              )}
               {selectedExperience.linkedinUrl && (
                 <Icon 
                   as={FaLinkedin} 

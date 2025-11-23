@@ -12,10 +12,23 @@ export const validateLinkedInUrl = (url) => {
   return linkedinRegex.test(url)
 }
 
-// CTC validation
-export const validateCTC = (ctc) => {
-  const ctcRegex = /^\d+(\.\d+)?\s*LPA$/i
-  return ctcRegex.test(ctc)
+// CTC validation - supports both internship and placement formats
+export const validateCTC = (ctc, positionType) => {
+  if (!ctc) return true; // Optional field
+  
+  // For Internship: ₹X,XXX/month format
+  const internshipRegex = /^₹[\d,]+\/month$/i;
+  // For Placement: X LPA format
+  const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
+  
+  if (positionType === 'Internship') {
+    return internshipRegex.test(ctc);
+  } else if (positionType === 'Placement') {
+    return placementRegex.test(ctc);
+  }
+  
+  // If no position type specified, allow either format
+  return internshipRegex.test(ctc) || placementRegex.test(ctc);
 }
 
 // Input sanitization
@@ -43,14 +56,14 @@ export const sanitizeInput = (input) => {
 }
 
 // Field validation
-export const validateField = (name, value) => {
+export const validateField = (name, value, formData = {}) => {
   switch (name) {
     case 'email':
       return validateEmail(value) || value === ''
     case 'linkedinUrl':
       return validateLinkedInUrl(value) || value === ''
     case 'ctc':
-      return validateCTC(value) || value === ''
+      return validateCTC(value, formData.positionType) || value === ''
     case 'overallExperience':
       return value.length >= 50 && value.length <= 2000
     case 'fullName':
@@ -102,8 +115,15 @@ export const validateExperienceForm = (formData) => {
     validationErrors.push('Position type must be either "Placement" or "Internship"')
   }
   
-  if (formData.ctc && !validateCTC(formData.ctc)) {
-    validationErrors.push('CTC must be in format like "6 LPA" or "6.5 LPA"')
+  // CTC validation (if provided)
+  if (formData.ctc && !validateCTC(formData.ctc, formData.positionType)) {
+    if (formData.positionType === 'Internship') {
+      validationErrors.push('CTC must be in format "₹X,XXX/month" (e.g., ₹50,000/month)');
+    } else if (formData.positionType === 'Placement') {
+      validationErrors.push('CTC must be in format "X LPA" (e.g., 6 LPA or 6.5 LPA)');
+    } else {
+      validationErrors.push('Please select position type first to determine CTC format');
+    }
   }
   
   if (formData.overallExperience.length < 50) {

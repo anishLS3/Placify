@@ -18,12 +18,23 @@ const contactSchema = new mongoose.Schema({
     maxlength: [254, 'Email cannot exceed 254 characters'],
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please add a valid email address']
   },
+  subject: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Subject cannot exceed 200 characters']
+  },
   message: {
     type: String,
     required: [true, 'Please add your message'],
     trim: true,
     minlength: [10, 'Message must be at least 10 characters long'],
     maxlength: [1000, 'Message cannot exceed 1000 characters']
+  },
+  // Admin management fields
+  status: {
+    type: String,
+    enum: ['new', 'in-progress', 'resolved', 'closed'],
+    default: 'new'
   },
   date: {
     type: Date,

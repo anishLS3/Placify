@@ -74,21 +74,22 @@ const detectAdvancedSpam = (message, email, name) => {
     return 'Spam detected: suspicious email domain';
   }
   
-  // Check for suspicious name patterns
+  // Check for suspicious name patterns (more specific matching)
   const suspiciousNames = ['test', 'admin', 'user', 'guest', 'anonymous', 'spam'];
-  if (suspiciousNames.some(suspicious => lowerName.includes(suspicious))) {
+  const nameWords = lowerName.split(' ');
+  if (nameWords.some(word => suspiciousNames.includes(word.trim()))) {
     return 'Spam detected: suspicious name pattern';
   }
   
-  // Check for excessive numbers
+  // Check for excessive numbers (more lenient)
   const numberCount = (message.match(/\d/g) || []).length;
-  if (numberCount > message.length * 0.6) {
+  if (numberCount > message.length * 0.8) {
     return 'Spam detected: excessive numbers';
   }
   
-  // Check for excessive special characters
+  // Check for excessive special characters (more lenient)
   const specialCharCount = (message.match(/[!@#$%^&*()_+=\[\]{}|;':",./<>?\\]/g) || []).length;
-  if (specialCharCount > message.length * 0.4) {
+  if (specialCharCount > message.length * 0.6) {
     return 'Spam detected: excessive special characters';
   }
   
@@ -189,25 +190,33 @@ const detectSpam = (message, email) => {
 // Submit contact form
 exports.submitContact = async (req, res) => {
   try {
-    // Preprocess and sanitize input data
-    const processedData = preprocessContactData(req.body);
-    const { name, email, message, recaptchaToken } = processedData;
-    
-    // Validate required fields after preprocessing
-    if (!name || !email || !message) {
-      return res.status(400).json({ 
-        message: 'All fields (name, email, message) are required' 
-      });
-    }
-    
-    // Check for empty strings after sanitization
-    if (name.length === 0 || email.length === 0 || message.length === 0) {
-      return res.status(400).json({ 
-        message: 'All fields must contain valid content' 
-      });
-    }
-    
-    // Verify reCAPTCHA (skip in development mode)
+  // Preprocess and sanitize input data
+  const processedData = preprocessContactData(req.body);
+  const { name, email, message, recaptchaToken } = processedData;
+  
+  // Extract subject from message if it's embedded
+  let subject = '';
+  let cleanMessage = message;
+  
+  if (message && message.startsWith('Subject:')) {
+    const lines = message.split('\n');
+    subject = lines[0].replace('Subject:', '').trim();
+    cleanMessage = lines.slice(2).join('\n').trim(); // Skip subject line and empty line
+  }
+  
+  // Validate required fields after preprocessing
+  if (!name || !email || !cleanMessage) {
+    return res.status(400).json({ 
+      message: 'All fields (name, email, message) are required' 
+    });
+  }
+  
+  // Check for empty strings after sanitization
+  if (name.length === 0 || email.length === 0 || cleanMessage.length === 0) {
+    return res.status(400).json({ 
+      message: 'All fields must contain valid content' 
+    });
+  }    // Verify reCAPTCHA (skip in development mode)
     const isDevelopment = process.env.NODE_ENV === 'development'
     if (!isDevelopment) {
       if (!recaptchaToken) {
@@ -225,7 +234,7 @@ exports.submitContact = async (req, res) => {
     }
 
     // Advanced spam detection
-    const spamError = detectAdvancedSpam(message, email, name);
+    const spamError = detectAdvancedSpam(cleanMessage, email, name);
     if (spamError) {
       return res.status(400).json({ 
         success: false,
@@ -234,32 +243,30 @@ exports.submitContact = async (req, res) => {
       });
     }
     
-    // Duplicate content detection
+    // Duplicate content detection (only check for exact message matches, not email)
     const existingContact = await Contact.findOne({
-      $or: [
-        { email: email },
-        { message: message }
-      ]
+      message: cleanMessage,
+      date: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Only check last 24 hours
     });
     
     if (existingContact) {
       return res.status(400).json({
         success: false,
-        message: 'Duplicate submission detected'
+        message: 'Similar message was recently submitted. Please wait before submitting again.'
       });
     }
     
-    // Check for minimum message quality
-    const words = message.trim().split(/\s+/);
-    if (words.length < 5) {
+    // Check for minimum message quality (more lenient)
+    const words = cleanMessage.trim().split(/\s+/);
+    if (words.length < 3) {
       return res.status(400).json({ 
         message: 'Message seems too short to be meaningful' 
       });
     }
     
-    // Check for excessive numbers in message
-    const numberCount = (message.match(/\d/g) || []).length;
-    if (numberCount > message.length * 0.6) {
+    // Check for excessive numbers in message (more lenient)
+    const numberCount = (cleanMessage.match(/\d/g) || []).length;
+    if (numberCount > cleanMessage.length * 0.8) {
       return res.status(400).json({ 
         message: 'Message contains too many numbers' 
       });
@@ -280,8 +287,15 @@ exports.submitContact = async (req, res) => {
       });
     }
     
-    // Create and save contact with sanitized data
-    const newContact = new Contact({ name, email, message });
+    // Create and save contact with sanitized data and extracted subject
+    const contactData = { 
+      name, 
+      email, 
+      message: cleanMessage,
+      subject: subject || undefined // Only include subject if it exists
+    };
+    
+    const newContact = new Contact(contactData);
     const contact = await newContact.save();
     
     res.status(201).json({

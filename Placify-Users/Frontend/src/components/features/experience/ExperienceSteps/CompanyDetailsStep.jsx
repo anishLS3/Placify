@@ -3,6 +3,24 @@ import {
 } from '@chakra-ui/react'
 
 const CompanyDetailsStep = ({ formData, handleChange }) => {
+  // Helper function to handle position type change and clear CTC if format doesn't match
+  const handlePositionTypeChange = (e) => {
+    const newPositionType = e.target.value;
+    handleChange(e); // Update position type
+    
+    // Clear CTC if it doesn't match the new position type format
+    if (formData.ctc) {
+      const internshipRegex = /^₹[\d,]+\/month$/i;
+      const placementRegex = /^\d+(\.\d+)?\s*LPA$/i;
+      
+      if (newPositionType === 'Internship' && !internshipRegex.test(formData.ctc)) {
+        handleChange({ target: { name: 'ctc', value: '' } });
+      } else if (newPositionType === 'Placement' && !placementRegex.test(formData.ctc)) {
+        handleChange({ target: { name: 'ctc', value: '' } });
+      }
+    }
+  };
+
   return (
     <VStack spacing={6} align="start" w="full">
       <h2 style={{ 
@@ -72,7 +90,7 @@ const CompanyDetailsStep = ({ formData, handleChange }) => {
           <Select
             name="positionType"
             value={formData.positionType}
-            onChange={handleChange}
+            onChange={handlePositionTypeChange}
             placeholder="Select position type"
             bg="whiteAlpha.100"
             border="1px solid"
@@ -147,9 +165,20 @@ const CompanyDetailsStep = ({ formData, handleChange }) => {
             name="ctc"
             value={formData.ctc}
             onChange={handleChange}
-            placeholder="6 LPA"
-            pattern="^\d+(\.\d+)?\s*LPA$"
-            title="Please enter CTC in format like '6 LPA' or '6.5 LPA'"
+            placeholder={
+              formData.positionType === 'Internship' 
+                ? "₹50,000/month" 
+                : formData.positionType === 'Placement'
+                ? "6 LPA"
+                : "Enter CTC"
+            }
+            title={
+              formData.positionType === 'Internship'
+                ? "Please enter CTC in format like '₹50,000/month'"
+                : formData.positionType === 'Placement'
+                ? "Please enter CTC in format like '6 LPA' or '6.5 LPA'"
+                : "Select position type first"
+            }
             maxLength={20}
             bg="whiteAlpha.100"
             border="1px solid"
@@ -162,6 +191,14 @@ const CompanyDetailsStep = ({ formData, handleChange }) => {
             }}
             h={12}
           />
+          {formData.positionType && (
+            <Text fontSize="xs" color="whiteAlpha.500" mt={1}>
+              {formData.positionType === 'Internship' 
+                ? "Format: ₹X,XXX/month (e.g., ₹50,000/month)"
+                : "Format: X LPA (e.g., 6 LPA or 6.5 LPA)"
+              }
+            </Text>
+          )}
         </FormControl>
       </HStack>
     </VStack>

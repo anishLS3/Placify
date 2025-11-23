@@ -5,7 +5,7 @@ import {
 import { FaPaperPlane } from 'react-icons/fa'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { submitContact, validateForm } from '@/utils'
+import { submitContact, validateForm, validateField } from '@/utils'
 import { handleError, getUserFriendlyMessage, formatValidationErrors, retryRequest } from '@/utils/errorHandler'
 import ReCAPTCHA from 'react-google-recaptcha'
 
@@ -65,7 +65,6 @@ const ContactFormSection = () => {
     
     // Real-time validation for better UX
     if (value.trim() && ['firstName', 'lastName', 'email', 'subject', 'message'].includes(name)) {
-      const { validateField } = require('@/utils/validation')
       const error = validateField(name, value, newFormData)
       if (error) {
         setErrors(prev => ({

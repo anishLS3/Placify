@@ -3,6 +3,7 @@ import {
 } from '@chakra-ui/react'
 import { FaLinkedin } from 'react-icons/fa'
 import { motion } from 'framer-motion'
+import VerificationBadge from '../../../common/VerificationBadge'
 
 const MotionBox = motion(Box)
 
@@ -20,6 +21,7 @@ const SmallExperienceCard = ({ experience, onClick, index }) => {
       border="1px solid"
       borderColor="gray.200"
       cursor="pointer"
+      position="relative"
       _hover={{ 
         transform: "translateY(-4px)",
         boxShadow: "0 8px 25px rgba(0, 0, 0, 0.1)",
@@ -27,6 +29,24 @@ const SmallExperienceCard = ({ experience, onClick, index }) => {
       }}
       onClick={() => onClick(experience)}
     >
+      {/* Verification Badge */}
+      {experience.verificationBadge && (
+        <VerificationBadge 
+          size="sm" 
+          top={3} 
+          right={3}
+        />
+      )}
+      
+      {/* Verification Badge */}
+      {experience.verificationBadge && (
+        <VerificationBadge 
+          size="sm" 
+          top={3} 
+          right={3}
+        />
+      )}
+      
       <VStack align="start" spacing={3}>
         <HStack spacing={2} w="full" justify="space-between">
           <HStack spacing={2}>
