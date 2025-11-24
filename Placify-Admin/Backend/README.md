@@ -423,8 +423,8 @@ NODE_ENV=development
 
 # Database
 MONGODB_URI=mongodb://localhost:27017/placify-admin
-# For MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/placify-admin
+# For MongoDB Atlas, use this format:
+# MONGODB_URI=mongodb+srv://[USERNAME]:[PASSWORD]@[CLUSTER].mongodb.net/placify-admin
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-here

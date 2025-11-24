@@ -45,7 +45,9 @@ This backend provides a RESTful API for managing placement experiences and conta
    Edit the `.env` file with your configuration:
    ```env
    # Database
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/placify
+   MONGODB_URI=mongodb://localhost:27017/placify-admin
+   # For MongoDB Atlas, use this format:
+   # MONGODB_URI=mongodb+srv://[USERNAME]:[PASSWORD]@[CLUSTER].mongodb.net/placify-admin
    
    # Server Configuration
    PORT=5000
